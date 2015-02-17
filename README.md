@@ -9,6 +9,21 @@ __CLJS needs a pretty printer__ - Clojure has two pretty-printers available, whi
 
 - `src/clj` and `test/clj` has the original clojure pprint
 - `src/cljs`  and `test/cljs` has the in-progress clojurescript pprint
+- `src/diff_gen` generates pprint implementation diffs between clj and cljs
+- `src/diff_show` displays the diff report
+
+## diff plan
+
+Creating a diff aid to easily show changes between pprint in clj and cljs.
+Should help debugging and review:
+
+- use clojure.tools.reader/analyzer to get text of each function/macro/var
+- build index of functions/macros implemented
+
+- dump each function (start to end lines) to a separate file
+- run wdiff with the (-w -x -y -z args set to span tags with classes)
+- output wdiff result to a result html file, with newlines replaced with br
+- create result page (anchor links for each tag, and ToC)
 
 # Thoughts
 
