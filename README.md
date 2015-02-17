@@ -9,8 +9,8 @@ __CLJS needs a pretty printer__ - Clojure has two pretty-printers available, whi
 
 - `src/clj` and `test/clj` has the original clojure pprint
 - `src/cljs`  and `test/cljs` has the in-progress clojurescript pprint
-- `src/diff_gen` generates pprint implementation diffs between clj and cljs
-- `src/diff_show` displays the diff report
+- `src/diff` generates pprint implementation diffs between clj and cljs
+- `src/report` displays the diff report
 
 ## diff plan
 
