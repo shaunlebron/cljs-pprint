@@ -48,6 +48,7 @@
       :source-map true}}]}
 
   :figwheel
-  {:http-server-root "report"}
+  {:http-server-root "report"
+   :css-dirs "resources/report"}
 
   )

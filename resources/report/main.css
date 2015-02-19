@@ -1,0 +1,32 @@
+body {
+  margin: 0;
+}
+
+table {
+  border-collapse: collapse;
+}
+
+td {
+  font-family: Helvetica, sans-serif;
+  padding: 20px;
+  color: #444;
+  vertical-align: top;
+}
+
+tr.header {
+  border-top: 2px solid #EEE;
+}
+
+tr.header td {
+  padding-bottom: 0;
+}
+
+.func-name {
+  color: #333;
+  font-size: 1.2em;
+  font-weight: bold;
+}
+
+.func-head {
+  color: #AAA;
+}

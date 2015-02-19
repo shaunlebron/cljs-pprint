@@ -1,5 +1,6 @@
 (ns report.core
   (:require
+    [clojure.string :refer [join]]
     [om.core :as om]
     [om.dom :as dom]
     [om-tools.core :refer-macros [defcomponent]]
@@ -12,11 +13,44 @@
 (def forms (atom nil))
 
 (def clj->cljs-defs
-  {"with-pretty-writer" ["with-pretty-writer"]})
+  {"with-pretty-writer" nil
+   "getf" nil
+   "setf" nil
+   "pretty-writer" nil
+   "pprint" ["pprint*" "pprint-sb" "pprint-str" "pprint"]
+   "pretty-writer?" nil
+   "make-pretty-writer" nil
+   })
+
+(defn func-head
+  [form]
+  (let [name- (join " " (->> form :name (drop 1)))
+        filename (:filename form)
+        lines (join "-" (:lines form))]
+    [:div.func-head
+     [:span.func-name name-] " @ " filename " : " lines]))
+
+(defn group
+  [[orig-name p]]
+  (let [orig (get-in @forms [:clj orig-name])
+        p (or p orig-name)
+        port-names (if (sequential? p) p [p])
+        ports (map #(get-in @forms [:cljs %]) port-names)]
+    (list
+      [:tr.header
+       [:td (func-head orig)]
+       [:td (map func-head ports)]]
+      [:tr.code
+       [:td [:pre (:source orig)]]
+       [:td [:pre (join "\n\n" (map :source ports))]]])))
 
 (defn page []
   (html
-    [:div "YO"]))
+    [:table
+     [:tr
+      [:td "CLOJURE"]
+      [:td "CLOJURESCRIPT"]]
+     (map group clj->cljs-defs)]))
 
 (defn re-render
   []
