@@ -16,27 +16,29 @@
   :source-paths ["src/diff"]
   :main core
 
-  :clean-targets ["out/test/out"
-                  "out/test/pprint.test.js"
-                  "out/test/pprint.test.js.map"
-                  "out/report/out"
-                  "out/report/report.js"]
+  :clean-targets ["resources/test/out"
+                  "resources/test/pprint.test.js"
+                  "resources/test/pprint.test.js.map"
+                  "resources/report/out"
+                  "resources/report/report.js"]
 
   :cljsbuild
-  {:test-commands {"test" ["phantomjs" "out/test/unit-test.js" "out/test/unit-test.html"]}
+  {:test-commands {"test" ["phantomjs" "resources/test/unit-test.js" "resources/test/unit-test.html"]}
 
    :builds
    [{:id "test"
      :source-paths ["src/cljs" "test/cljs"]
      :compiler
-     {:output-to  "out/test/pprint.test.js"
-      :source-map "out/test/pprint.test.js.map"
-      :output-dir "out/test/out"
+     {:output-to  "resources/test/pprint.test.js"
+      :source-map "resources/test/pprint.test.js.map"
+      :output-dir "resources/test/out"
       :optimizations :whitespace}}
 
     {:id "report"
      :source-paths ["src/report"]
      :compiler
-     {:output-to  "out/report/report.js"
-      :output-dir "out/report/out"
-      :optimizations :whitespace}}]})
+     {:main core
+      :output-to  "resources/report/report.js"
+      :output-dir "resources/report/out"
+      :optimizations :none
+      :source-map true}}]})

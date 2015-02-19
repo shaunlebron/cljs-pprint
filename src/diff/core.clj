@@ -9,7 +9,7 @@
     )
   )
 
-(def output-name "out/report/forms.edn")
+(def output-name "resources/report/forms.edn")
 
 ;;------------------------------------------------------------
 ;; Filename utilities

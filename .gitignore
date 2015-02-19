@@ -1,13 +1,13 @@
 
 *.swp
 
-out/report/out
-out/report/forms.edn
-out/report/report.js
-out/report/report.js.map
+resources/report/out
+resources/report/forms.edn
+resources/report/report.js
+resources/report/report.js.map
 
-out/test/out
-out/test/pprint.test.js
-out/test/pprint.test.js.map
+resources/test/out
+resources/test/pprint.test.js
+resources/test/pprint.test.js.map
 
 target/
