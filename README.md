@@ -19,4 +19,7 @@ __CLJS needs a pretty printer__ - Clojure has two pretty-printers available, whi
 ```sh
 # runs the diff tool
 lein run
+
+# runs report server at http://localhost:3449
+rlwrap lein figwheel report
 ```
