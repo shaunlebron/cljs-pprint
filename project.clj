@@ -17,7 +17,7 @@
             [lein-figwheel "0.2.3-SNAPSHOT"]]
 
   :source-paths ["src/diff"]
-  :main core
+  :main diff.core
 
   :clean-targets ["resources/test/out"
                   "resources/test/pprint.test.js"

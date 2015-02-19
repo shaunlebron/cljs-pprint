@@ -1,4 +1,4 @@
-(ns core
+(ns diff.core
   (:require
     [clojure.java.io :as io]
     [clojure.tools.reader :as reader]
