@@ -6,12 +6,15 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
 
   :dependencies [[org.clojure/clojure "1.6.0"]
-                 [org.clojure/clojurescript "0.0-2850"]
+                 [org.clojure/clojurescript "0.0-2665"]
                  [org.omcljs/om "0.8.8"]
+                 [prismatic/om-tools "0.3.10"]
                  [sablono "0.3.4"]
-                 [fipp "0.5.2"]]
+                 [fipp "0.5.2"]
+                 [figwheel "0.2.3-SNAPSHOT"]]
 
-  :plugins [[lein-cljsbuild "1.0.4"]]
+  :plugins [[lein-cljsbuild "1.0.4"]
+            [lein-figwheel "0.2.3-SNAPSHOT"]]
 
   :source-paths ["src/diff"]
   :main core
@@ -41,4 +44,9 @@
       :output-to  "resources/report/report.js"
       :output-dir "resources/report/out"
       :optimizations :none
-      :source-map true}}]})
+      :source-map true}}]}
+
+  :figwheel
+  {:http-server-root "report"}
+
+  )

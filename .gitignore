@@ -11,3 +11,5 @@ resources/test/pprint.test.js
 resources/test/pprint.test.js.map
 
 target/
+
+figwheel_server.log
