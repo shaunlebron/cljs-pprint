@@ -11,7 +11,8 @@
                  [prismatic/om-tools "0.3.10"]
                  [sablono "0.3.4"]
                  [fipp "0.5.2"]
-                 [figwheel "0.2.3-SNAPSHOT"]]
+                 [figwheel "0.2.3-SNAPSHOT"]
+                 [cljs-ajax "0.3.10"]]
 
   :plugins [[lein-cljsbuild "1.0.4"]
             [lein-figwheel "0.2.3-SNAPSHOT"]]
