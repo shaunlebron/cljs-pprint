@@ -17,8 +17,8 @@
   :plugins [[lein-cljsbuild "1.0.4"]
             [lein-figwheel "0.2.3-SNAPSHOT"]]
 
-  :source-paths ["src/diff"]
-  :main diff.core
+  :source-paths ["src/parse"]
+  :main parse.core
 
   :clean-targets ["resources/test/out"
                   "resources/test/pprint.test.js"
