@@ -14,5 +14,9 @@ __CLJS needs a pretty printer__ - Clojure has two pretty-printers available, whi
 
 [See docs for more notes](docs/)
 
+# Running
 
+```sh
+# runs the diff tool
+lein run
 ```

@@ -1,4 +1,4 @@
-(ns diff-pprint-port.core
+(ns core
   (:require
     [clojure.java.io :as io]
     [clojure.tools.reader :as reader]
@@ -9,7 +9,7 @@
     )
   )
 
-(def output-name "forms.edn")
+(def output-name "out/report/forms.edn")
 
 ;;------------------------------------------------------------
 ;; Filename utilities
@@ -97,8 +97,8 @@
 
 (defn make-all-form-maps
   []
-  (make-form-map clj-forms "src-to-analyze/clj/" [".clj"])
-  (make-form-map cljs-forms "src-to-analyze/cljs/" [".clj" ".cljs"]))
+  (make-form-map clj-forms "src/clj" [".clj"])
+  (make-form-map cljs-forms "src/cljs/" [".clj" ".cljs"]))
 
 ;;------------------------------------------------------------
 ;; Form Displaying

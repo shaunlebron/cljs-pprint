@@ -2,9 +2,12 @@
 *.swp
 
 out/report/out
+out/report/forms.edn
 out/report/report.js
 out/report/report.js.map
 
 out/test/out
 out/test/pprint.test.js
 out/test/pprint.test.js.map
+
+target/

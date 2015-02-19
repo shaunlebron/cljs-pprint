@@ -8,11 +8,13 @@
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [org.clojure/clojurescript "0.0-2850"]
                  [org.omcljs/om "0.8.8"]
-                 [sablono "0.3.4"]]
+                 [sablono "0.3.4"]
+                 [fipp "0.5.2"]]
 
   :plugins [[lein-cljsbuild "1.0.4"]]
 
   :source-paths ["src/diff"]
+  :main core
 
   :clean-targets ["out/test/out"
                   "out/test/pprint.test.js"
