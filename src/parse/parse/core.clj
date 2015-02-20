@@ -63,6 +63,13 @@
         [a b c]
         [a b]))))
 
+(defn form-key
+  [name-form]
+  (let [[type- name- key-] name-form]
+    (if key-
+      (str name- " " key-)
+      (str name-))))
+
 (defn form-data
   [form]
   (let [m (meta form)
@@ -70,18 +77,12 @@
         num-lines (inc (- (:end-line m) (:line m)))]
     (if name-
       {;:form form
-       :name name-
+       :type (str (first name-))
+       :key (form-key name-)
        :lines [(:line m) (:end-line m)]
        :filename (isolate-filename (:file m))
        :source (join "\n" (take-last num-lines (split-lines (:source m))))
        })))
-
-(defn form-key
-  [form]
-  (let [[type- name- key-] (:name form)]
-    (if key-
-      (str name- " " key-)
-      (str name-))))
 
 ;;------------------------------------------------------------
 ;; Form Storing
@@ -93,13 +94,19 @@
 (defn make-form-map
   [atom- dir exts]
   (let [values (vec (keep form-data (get-forms-from-files (get-filenames dir exts))))
-        names (map form-key values)]
+        names (map :key values)]
     (reset! atom- (zipmap names values))))
 
 (defn make-all-form-maps
   []
   (make-form-map clj-forms "src/clj" [".clj"])
   (make-form-map cljs-forms "src/cljs/" [".clj" ".cljs"]))
+
+(defn make-file-def-list
+  [forms]
+  (->> (keys forms)
+       (sort-by #(get-in forms [% :lines 0]))
+       (group-by #(get-in forms [% :filename]))))
 
 ;;------------------------------------------------------------
 ;; Form Displaying
@@ -132,7 +139,9 @@
   (println "Retrieving forms...")
   (make-all-form-maps)
   (println (str "Writing forms to " output-name "..."))
-  (spit output-name (with-out-str (fipp {:clj @clj-forms
+  (spit output-name (with-out-str (fipp {:clj-files (make-file-def-list @clj-forms)
+                                         :cljs-files (make-file-def-list @cljs-forms)
+                                         :clj @clj-forms
                                          :cljs @cljs-forms})))
   (println "Done.")
   )
