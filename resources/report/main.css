@@ -15,13 +15,13 @@ table.toc td {
   vertical-align: top;
 }
 
-table.toc table td {
+table.toc table.defs td {
   font-family: monospace;
   list-style-type: none;
-  color: #999;
+  color: #AAA;
 }
 
-table.toc td.num {
+table.toc table.defs td.num {
   text-align: right;
   display: inline-block;
   width: 32px;
@@ -30,6 +30,11 @@ table.toc td.num {
 
 table.toc h1 {
   font-size: 12px;
+}
+
+a.toc-link {
+  text-decoration: none;
+  color: #45C05A;
 }
 
 table.code-table {

@@ -53,7 +53,7 @@
         ports (map #(get-in @forms [:cljs %]) port-names)]
     (list
       [:tr.header
-       [:td (func-head orig)]
+       [:td [:a {:name orig-name} (func-head orig)]]
        [:td (map func-head ports)]]
       [:tr.code
        [:td [:pre (:source orig)]]
@@ -67,10 +67,13 @@
        (for [[filename defs] (:clj-files @forms)]
          [:td
           [:h1 filename]
-          [:table
+          [:table.defs
            (for [d defs]
              [:tr [:td.num (get-in @forms [:clj d :lines 0])]
-                  [:td d]])]])]]
+                  [:td
+                   (if (contains? clj->cljs-defs d)
+                     [:a.toc-link {:href (str "#" d)} d]
+                     d)]])]])]]
      [:table.code-table
       [:tr
        [:td "CLOJURE"]
