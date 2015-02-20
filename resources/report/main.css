@@ -1,5 +1,6 @@
 body {
   margin: 0;
+  background-color: #f7f7f7;
 }
 
 table {
@@ -8,13 +9,13 @@ table {
 
 td {
   font-family: Helvetica, sans-serif;
-  padding: 20px;
+  padding: 40px 20px;
   color: #444;
   vertical-align: top;
 }
 
 tr.header {
-  border-top: 2px solid #EEE;
+  border-top: 4px solid #fff;
 }
 
 tr.header td {
