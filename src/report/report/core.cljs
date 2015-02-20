@@ -20,7 +20,22 @@
    "pprint" ["pprint*" "pprint-sb" "pprint-str" "pprint"]
    "pretty-writer?" nil
    "make-pretty-writer" nil
-   })
+   "*print-right-margin*" nil
+   "*print-miser-width*" nil
+   "*print-pretty*" nil
+   "PrettyFlush" "IPrettyFlush"
+   "*default-page-width*" nil
+   "get-field" nil
+   "set-field" nil
+   "get-column" nil
+   "get-line" nil
+   "get-max-column" nil
+   "set-max-column" nil
+   "get-writer" nil
+   "c-write-char" nil
+   "column-writer" nil
+   "logical-block" nil
+   "write-initial-lines" nil})
 
 (defn func-head
   [form]
