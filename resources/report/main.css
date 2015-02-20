@@ -3,31 +3,60 @@ body {
   background-color: #f7f7f7;
 }
 
-table {
+table.toc {
+  margin: 20px;
+  width: 1600px;
+  border-bottom: 4px solid #fff;
+}
+
+table.toc td {
+  font-family: Helvetica, sans-serif;
+  color: #444;
+  vertical-align: top;
+}
+
+table.toc table td {
+  font-family: monospace;
+  list-style-type: none;
+  color: #999;
+}
+
+table.toc td.num {
+  text-align: right;
+  display: inline-block;
+  width: 32px;
+  color: #CCC;
+}
+
+table.toc h1 {
+  font-size: 12px;
+}
+
+table.code-table {
   border-collapse: collapse;
 }
 
-td {
+table.code-table td {
   font-family: Helvetica, sans-serif;
   padding: 40px 20px;
   color: #444;
   vertical-align: top;
 }
 
-tr.header {
+table.code-table tr.header {
   border-top: 4px solid #fff;
 }
 
-tr.header td {
+table.code-table tr.header td {
   padding-bottom: 0;
 }
 
-.func-name {
+table.code-table .func-name {
   color: #333;
   font-size: 1.2em;
   font-weight: bold;
 }
 
-.func-head {
+table.code-table .func-head {
   color: #AAA;
 }

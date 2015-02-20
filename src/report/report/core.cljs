@@ -39,7 +39,7 @@
 
 (defn func-head
   [form]
-  (let [name- (join " " (->> form :name (drop 1)))
+  (let [name- (:key form)
         filename (:filename form)
         lines (join "-" (:lines form))]
     [:div.func-head
@@ -61,11 +61,21 @@
 
 (defn page []
   (html
-    [:table
-     [:tr
-      [:td "CLOJURE"]
-      [:td "CLOJURESCRIPT"]]
-     (map group clj->cljs-defs)]))
+    [:div
+     [:table.toc
+      [:tr
+       (for [[filename defs] (:clj-files @forms)]
+         [:td
+          [:h1 filename]
+          [:table
+           (for [d defs]
+             [:tr [:td.num (get-in @forms [:clj d :lines 0])]
+                  [:td d]])]])]]
+     [:table.code-table
+      [:tr
+       [:td "CLOJURE"]
+       [:td "CLOJURESCRIPT"]]
+      (map group clj->cljs-defs)]]))
 
 (defn re-render
   []
