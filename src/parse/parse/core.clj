@@ -109,28 +109,6 @@
        (group-by #(get-in forms [% :filename]))))
 
 ;;------------------------------------------------------------
-;; Form Displaying
-;;------------------------------------------------------------
-
-(defn show-form-map
-  [atom-]
-  (doseq [f (vals @atom-)]
-    (println (:name f))
-    (println (dissoc f :name :source :form))
-    (println)
-    (println (:source f))
-    (println "\n=====================================\n")))
-
-(defn show-all-form-maps
-  []
-  (println "CLJ FORMS:")
-  (show-form-map clj-forms)
-
-  (println "CLJS FORMS:")
-  (show-form-map cljs-forms)
-  )
-
-;;------------------------------------------------------------
 ;; Program Entry
 ;;------------------------------------------------------------
 
