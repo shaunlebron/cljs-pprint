@@ -57,7 +57,8 @@
   [form]
   (let [[a b c] form
         aname (name a)]
-    (when (.startsWith aname "def")
+    (when (and (.startsWith aname "def")
+               (not= aname "defdirectives"))
       (if (= "defmethod" aname)
         [a b c]
         [a b]))))
