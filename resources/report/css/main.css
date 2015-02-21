@@ -109,6 +109,18 @@ table.code-compare-table {
   border-collapse: collapse;
 }
 
+table.code-compare-table tr.header-row td h1 {
+  font-family: 'Roboto Slab', serif;
+  font-size: 2em;
+  font-weight: 300;
+  color: #333;
+  margin-bottom: 0;
+}
+
+table.code-compare-table tr.header-row td {
+  color: #777;
+}
+
 table.code-compare-table > tbody > tr > td:first-child {
   padding-left: 80px;
 }
@@ -132,6 +144,7 @@ table.code-compare-table .func-name {
   color: #333;
   font-size: 1.2em;
   font-weight: bold;
+  font-family: 'Inconsolata', monospace;
 }
 
 table.code-compare-table .func-head {

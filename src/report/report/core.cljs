@@ -80,9 +80,9 @@
   []
   [:div.code-compare-section
    [:table.code-compare-table
-    [:tr
-     [:td "CLOJURE"]
-     [:td "CLOJURESCRIPT"]]
+    [:tr.header-row
+     [:td [:h1 "Clojure"] "original clojure.pprint functions"]
+     [:td [:h1 "ClojureScript"] "new ported functions"]]
     (map code-compare-def progress)]])
 
 (defn page []
