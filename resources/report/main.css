@@ -1,16 +1,41 @@
 body {
   margin: 0;
   background-color: #f7f7f7;
+  font-family: Helvetica, sans-serif;
+}
+
+div.header {
+  padding:80px;
+  background-color: #fff;
+}
+
+div.header h1 {
+  color: #333;
+}
+
+div.header p {
+  color: #555;
+  width: 800px;
+  line-height: 1.6em;
+}
+
+div.header h1 a {
+  font-size: 0.5em;
+  vertical-align: middle;
+}
+
+div.header a {
+  text-decoration: none;
+  color: #0074d9;
 }
 
 table.toc {
-  margin: 20px;
+  padding: 20px;
   width: 1600px;
   border-bottom: 4px solid #fff;
 }
 
 table.toc td {
-  font-family: Helvetica, sans-serif;
   color: #444;
   vertical-align: top;
 }
@@ -42,7 +67,6 @@ table.code-table {
 }
 
 table.code-table td {
-  font-family: Helvetica, sans-serif;
   padding: 40px 20px;
   color: #444;
   vertical-align: top;

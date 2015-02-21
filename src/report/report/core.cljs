@@ -62,6 +62,25 @@
 (defn page []
   (html
     [:div
+     [:div.header
+      [:h1 "clojure.pprint - ClojureScript port "
+       [:a {:href "https://github.com/shaunlebron/cljs-pprint"} "(on github)"]]
+      [:p
+       (str "Data is at the core of any ClojureScript application, of course. "
+            "Users should be able to log this data in a readable format. "
+            "To this end, we are porting ")
+       [:a {:href "https://clojure.github.io/clojure/clojure.pprint-api.html"}
+            "clojure.pprint"]
+       (str " to ClojureScript.  This is a bit of a large task, so this page was created to help track its progress.")]
+      [:p
+       "(Also check out "
+       [:a {:href "https://github.com/brandonbloom/fipp/issues/7"} "fipp"]
+       " which is a faster, more idiomatic EDN printer being ported to ClojureScript.  And check out "
+       [:a {:href "https://github.com/binaryage/cljs-devtools-sample"} "cljs-devtools"]
+       ", an awesome solution for increasing visibility of ClojureScript data in the Chrome console.)"]
+      [:p
+       "Below, we list all clojure.pprint functions and other defs that have to be ported. "
+       "There is also a side-by-side comparison between the clojure and clojurescript functions currently implemented."]]
      [:table.toc
       [:tr
        (for [[filename defs] (:clj-files @forms)]
