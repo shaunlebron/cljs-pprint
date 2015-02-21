@@ -1,4 +1,4 @@
-# Help bring __pretty printing__ to ClojureScript
+# ClojureScript needs a __pretty printer__
 
 ```clojure
 ;; ugly
