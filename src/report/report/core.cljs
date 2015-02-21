@@ -1,41 +1,49 @@
 (ns report.core
+  (:require-macros
+    [cljs.core.async.macros :refer [go go-loop]]
+    [hiccups.core :refer [html defhtml]])
   (:require
+    [cljs.core.async :refer [chan <! put! close!]]
     [clojure.string :refer [join]]
-    [om.core :as om]
-    [om.dom :as dom]
-    [om-tools.core :refer-macros [defcomponent]]
-    [sablono.core :refer-macros [html]]
+    [hiccups.runtime]
     [figwheel.client :as fw]
-    [ajax.core :refer [GET]]))
+    [ajax.core :refer [GET]]
+    [markdown.core :refer [md->html]]))
 
 (enable-console-print!)
 
-(def forms (atom nil))
+(def forms nil)
+(def progress nil)
+(def welcome nil)
 
-(def clj->cljs-defs
-  {"with-pretty-writer" nil
-   "getf" nil
-   "setf" nil
-   "pretty-writer" nil
-   "pprint" ["pprint*" "pprint-sb" "pprint-str" "pprint"]
-   "pretty-writer?" nil
-   "make-pretty-writer" nil
-   "*print-right-margin*" nil
-   "*print-miser-width*" nil
-   "*print-pretty*" nil
-   "PrettyFlush" "IPrettyFlush"
-   "*default-page-width*" nil
-   "get-field" nil
-   "set-field" nil
-   "get-column" nil
-   "get-line" nil
-   "get-max-column" nil
-   "set-max-column" nil
-   "get-writer" nil
-   "c-write-char" nil
-   "column-writer" nil
-   "logical-block" nil
-   "write-initial-lines" nil})
+(defn welcome-section
+  []
+  [:div.header
+   (md->html welcome
+             :reference-links? true)])
+
+(defn file-toc-section
+  [filename defs]
+  (list
+    [:h3 filename]
+    [:table.def-table
+     (for [d defs]
+       [:tr [:td.num (get-in forms [:clj d :lines 0])]
+        [:td
+         (if (contains? progress d)
+           [:a.toc-link {:href (str "#" d)} d]
+           d)]])]))
+
+(defn toc-section
+  []
+  [:div.toc
+   [:h2 "Progress"]
+   [:p "These are the original clojure.pprint files and respective defs that need to be ported. Line numbers are displayed too."]
+   [:p "The " [:span.toc-link "green names"] " are currently ported; " [:u "click them"] " to see the original and ported versions together."]
+   [:table.file-table
+    [:tr
+     (for [[filename defs] (sort-by first (:clj-files forms))]
+       [:td (file-toc-section filename defs)])]]])
 
 (defn func-head
   [form]
@@ -45,68 +53,71 @@
     [:div.func-head
      [:span.func-name name-] " @ " filename " : " lines]))
 
-(defn group
+(defn code-block
+  [form]
+  [:table
+   [:tr
+    [:td.lines [:pre [:code
+                      (join "\n" (range (-> form :lines first)
+                                        (-> form :lines second inc)))]]]
+    [:td [:pre [:code.clojure (:source form)]]]]])
+
+(defn code-compare-section
   [[orig-name p]]
-  (let [orig (get-in @forms [:clj orig-name])
-        p (or p orig-name)
+  (let [orig (get-in forms [:clj orig-name])
+        p (if (= :same-name p) orig-name p)
         port-names (if (sequential? p) p [p])
-        ports (map #(get-in @forms [:cljs %]) port-names)]
+        ports (map #(get-in forms [:cljs %]) port-names)]
     (list
       [:tr.header
        [:td [:a {:name orig-name} (func-head orig)]]
        [:td (map func-head ports)]]
       [:tr.code
-       [:td [:pre (:source orig)]]
-       [:td [:pre (join "\n\n" (map :source ports))]]])))
+       [:td (code-block orig)]
+       [:td (map code-block ports)]])))
 
 (defn page []
   (html
     [:div
-     [:div.header
-      [:h1 "clojure.pprint - ClojureScript port "
-       [:a {:href "https://github.com/shaunlebron/cljs-pprint"} "(on github)"]]
-      [:p
-       (str "Data is at the core of any ClojureScript application, of course. "
-            "Users should be able to log this data in a readable format. "
-            "To this end, we are porting ")
-       [:a {:href "https://clojure.github.io/clojure/clojure.pprint-api.html"}
-            "clojure.pprint"]
-       (str " to ClojureScript.  This is a bit of a large task, so this page was created to help track its progress.")]
-      [:p
-       "(Also check out "
-       [:a {:href "https://github.com/brandonbloom/fipp/issues/7"} "fipp"]
-       " which is a faster, more idiomatic EDN printer being ported to ClojureScript.  And check out "
-       [:a {:href "https://github.com/binaryage/cljs-devtools-sample"} "cljs-devtools"]
-       ", an awesome solution for increasing visibility of ClojureScript data in the Chrome console.)"]
-      [:p
-       "Below, we list all clojure.pprint functions and other defs that have to be ported. "
-       "There is also a side-by-side comparison between the clojure and clojurescript functions currently implemented."]]
-     [:table.toc
-      [:tr
-       (for [[filename defs] (:clj-files @forms)]
-         [:td
-          [:h1 filename]
-          [:table.defs
-           (for [d defs]
-             [:tr [:td.num (get-in @forms [:clj d :lines 0])]
-                  [:td
-                   (if (contains? clj->cljs-defs d)
-                     [:a.toc-link {:href (str "#" d)} d]
-                     d)]])]])]]
+     (welcome-section)
+     (toc-section)
      [:table.code-table
       [:tr
        [:td "CLOJURE"]
        [:td "CLOJURESCRIPT"]]
-      (map group clj->cljs-defs)]]))
+      (map code-compare-section progress)]]))
 
 (defn re-render
   []
-  (dom/render (page) (. js/document (getElementById "app"))))
+  (let [e (. js/document (getElementById "app"))]
+    (aset e "innerHTML" (page)))
+  (.each (js/$ "pre code")
+    (fn [i block]
+      (.highlightBlock js/hljs block))))
+
+(defn get-async
+  [url res-format]
+  (let [c (chan)
+        handler (fn [data] (put! c data) (close! c))]
+    (GET url {:response-format res-format :handler handler})
+    c))
+
+(defn fetch-all
+  [urls]
+  (->> urls
+       (map #(get-async (first %) (second %)))
+       (zipmap (keys urls))))
 
 (defn main
   []
-  (GET "forms.edn" {:response-format :edn
-                    :handler #(do (reset! forms %) (re-render))}))
+  (let [downloads (fetch-all {"forms.edn" :edn
+                              "progress.edn" :edn
+                              "welcome.md" :raw})]
+    (go
+      (set! forms    (<! (get downloads "forms.edn")))
+      (set! progress (<! (get downloads "progress.edn")))
+      (set! welcome  (<! (get downloads "welcome.md")))
+      (re-render))))
 
 (fw/start
   {:on-jsload main})

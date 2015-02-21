@@ -1,0 +1,23 @@
+{"with-pretty-writer"     :same-name
+ "getf"                   :same-name
+ "setf"                   :same-name
+ "pretty-writer"          :same-name
+ "pprint"                 ["pprint*" "pprint-sb" "pprint-str" "pprint"]
+ "pretty-writer?"         :same-name
+ "make-pretty-writer"     :same-name
+ "*print-right-margin*"   :same-name
+ "*print-miser-width*"    :same-name
+ "*print-pretty*"         :same-name
+ "PrettyFlush"            "IPrettyFlush"
+ "*default-page-width*"   :same-name
+ "get-field"              :same-name
+ "set-field"              :same-name
+ "get-column"             :same-name
+ "get-line"               :same-name
+ "get-max-column"         :same-name
+ "set-max-column"         :same-name
+ "get-writer"             :same-name
+ "c-write-char"           :same-name
+ "column-writer"          :same-name
+ "logical-block"          :same-name
+ "write-initial-lines"    :same-name}

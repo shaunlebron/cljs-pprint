@@ -1,22 +1,40 @@
+@import url(http://fonts.googleapis.com/css?family=Roboto+Slab:400,700,300);
+@import url(http://fonts.googleapis.com/css?family=Open+Sans:400,700);
+@import url(http://fonts.googleapis.com/css?family=Inconsolata);
+
 body {
   margin: 0;
   background-color: #f7f7f7;
-  font-family: Helvetica, sans-serif;
+  font-family: 'Open Sans', sans-serif;
+}
+
+pre code {
+  font-family:  monospace;
 }
 
 div.header {
   padding:80px;
-  background-color: #fff;
 }
 
 div.header h1 {
+  font-family: 'Roboto Slab', serif;
+  font-weight: 300;
   color: #333;
 }
 
 div.header p {
-  color: #555;
-  width: 800px;
+  color: #888;
+  max-width: 800px;
   line-height: 1.6em;
+}
+
+div.header p b {
+  color: #555;
+}
+
+div.header pre {
+  padding: 20px;
+  border-left: 20px solid #fff;
 }
 
 div.header h1 a {
@@ -29,46 +47,71 @@ div.header a {
   color: #0074d9;
 }
 
-table.toc {
-  padding: 20px;
-  width: 1600px;
-  border-bottom: 4px solid #fff;
+div.toc {
+  padding:80px;
+  background-color: #fff;
+  width: 100%;
 }
 
-table.toc td {
+div.toc h2 {
+  font-family: 'Roboto Slab', serif;
+  font-weight: 300;
+}
+
+div.toc p {
+  color: #888;
+  font-size: 0.8em;
+}
+
+div.toc .file-table {
+  margin-top: 30px;
+}
+
+div.toc .file-table > td {
+  padding-left: 20px;
+}
+
+div.toc .file-table td {
+  font-size: 0.8em;
   color: #444;
   vertical-align: top;
 }
 
-table.toc table.defs td {
-  font-family: monospace;
+div.toc .def-table td {
   list-style-type: none;
   color: #AAA;
 }
 
-table.toc table.defs td.num {
+div.toc .def-table td:last-child {
+  min-width: 80px;
+}
+
+div.toc .def-table td.num {
   text-align: right;
   display: inline-block;
-  width: 32px;
   color: #CCC;
 }
 
-table.toc h1 {
-  font-size: 12px;
+div.toc h3 {
+  font-family: 'Roboto Slab', serif;
+  font-weight: normal;
+  font-size: 0.93em;
 }
 
-a.toc-link {
+.toc-link {
   text-decoration: none;
   color: #45C05A;
 }
 
 table.code-table {
   border-collapse: collapse;
+  width: 1200px;
 }
 
 table.code-table td {
   padding: 40px 20px;
-  color: #444;
+  color: #555;
+  font-size: 0.9em;
   vertical-align: top;
 }
 

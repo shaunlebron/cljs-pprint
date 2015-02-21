@@ -1,10 +1,10 @@
 
 *.swp
 
-resources/report/out
+resources/report/js/out
+resources/report/js/report.js
+resources/report/js/report.js.map
 resources/report/forms.edn
-resources/report/report.js
-resources/report/report.js.map
 
 resources/test/out
 resources/test/pprint.test.js
