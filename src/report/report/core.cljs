@@ -55,14 +55,14 @@
 
 (defn code-block
   [form]
-  [:table
+  [:table.code-block
    [:tr
     [:td.lines [:pre [:code
                       (join "\n" (range (-> form :lines first)
                                         (-> form :lines second inc)))]]]
     [:td [:pre [:code.clojure (:source form)]]]]])
 
-(defn code-compare-section
+(defn code-compare-def
   [[orig-name p]]
   (let [orig (get-in forms [:clj orig-name])
         p (if (= :same-name p) orig-name p)
@@ -76,16 +76,21 @@
        [:td (code-block orig)]
        [:td (map code-block ports)]])))
 
+(defn code-compare-section
+  []
+  [:div.code-compare-section
+   [:table.code-compare-table
+    [:tr
+     [:td "CLOJURE"]
+     [:td "CLOJURESCRIPT"]]
+    (map code-compare-def progress)]])
+
 (defn page []
   (html
     [:div
      (welcome-section)
      (toc-section)
-     [:table.code-table
-      [:tr
-       [:td "CLOJURE"]
-       [:td "CLOJURESCRIPT"]]
-      (map code-compare-section progress)]]))
+     (code-compare-section)]))
 
 (defn re-render
   []

@@ -88,7 +88,6 @@ div.toc .def-table td:last-child {
 
 div.toc .def-table td.num {
   text-align: right;
-  display: inline-block;
   color: #CCC;
 }
 
@@ -103,32 +102,43 @@ div.toc h3 {
   color: #45C05A;
 }
 
-table.code-table {
-  border-collapse: collapse;
-  width: 1200px;
+div.code-compare-section {
 }
 
-table.code-table td {
+table.code-compare-table {
+  border-collapse: collapse;
+}
+
+table.code-compare-table > tbody > tr > td:first-child {
+  padding-left: 80px;
+}
+
+table.code-compare-table > tbody > tr > td {
   padding: 40px 20px;
   color: #555;
   font-size: 0.9em;
   vertical-align: top;
 }
 
-table.code-table tr.header {
+table.code-compare-table tr.header {
   border-top: 4px solid #fff;
 }
 
-table.code-table tr.header td {
+table.code-compare-table tr.header > td {
   padding-bottom: 0;
 }
 
-table.code-table .func-name {
+table.code-compare-table .func-name {
   color: #333;
   font-size: 1.2em;
   font-weight: bold;
 }
 
-table.code-table .func-head {
+table.code-compare-table .func-head {
   color: #AAA;
+}
+
+table.code-block td.lines code {
+  text-align: right;
+  color: #CCC;
 }
