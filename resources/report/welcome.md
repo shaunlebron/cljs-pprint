@@ -24,7 +24,7 @@ __How?__
 
 We are porting the
 [clojure.pprint](https://clojure.github.io/clojure/clojure.pprint-api.html)
-library from Clojure to ClojureScript.
+library from Clojure to ClojureScript.  ([official tracker](http://dev.clojure.org/jira/browse/CLJS-710))
 
 __Why this page?__
 

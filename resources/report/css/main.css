@@ -9,11 +9,14 @@ body {
 }
 
 pre code {
-  font-family:  monospace;
+  font-family:  'Inconsolata', monospace;
 }
+
+/*****************************************************/
 
 div.header {
   padding:80px;
+  width: 840px;
 }
 
 div.header h1 {
@@ -33,8 +36,17 @@ div.header p b {
 }
 
 div.header pre {
+  margin: 50px 0;
   padding: 20px;
-  border-left: 20px solid #fff;
+  background-color: #fff;
+  border-top: 1px solid #EEE;
+  border-left: 1px solid #DDD;
+  border-right: 1px solid #EEE;
+  border-bottom: 1px solid #DDD;
+}
+
+div.header pre code {
+  background-color: #fff;
 }
 
 div.header h1 a {
@@ -46,6 +58,8 @@ div.header a {
   text-decoration: none;
   color: #0074d9;
 }
+
+/*****************************************************/
 
 div.toc {
   padding:80px;
@@ -101,6 +115,8 @@ div.toc h3 {
   text-decoration: none;
   color: #45C05A;
 }
+
+/*****************************************************/
 
 div.code-compare-section {
 }
