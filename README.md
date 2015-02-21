@@ -9,15 +9,15 @@ __CLJS needs a pretty printer__ - Clojure has two pretty-printers available, whi
 
 - `src/clj` and `test/clj` has the original clojure pprint
 - `src/cljs`  and `test/cljs` has the in-progress clojurescript pprint
-- `src/diff` generates pprint implementation diffs between clj and cljs
-- `src/report` displays the diff report
+- `src/parse` parses aforementioned source directories to generate data for a comparison report
+- `src/report` page that displays a progress/comparison report and welcome page
 
 [See docs for more notes](docs/)
 
 ## Running
 
 ```sh
-# runs the diff tool
+# runs the parse tool
 lein run
 
 # runs report server at http://localhost:3449
