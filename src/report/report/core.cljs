@@ -93,13 +93,24 @@
      (toc-section)
      (code-compare-section)]))
 
+(defn highlight-code!
+  []
+  (.each (js/$ "pre code")
+         (fn [i block]
+           (.highlightBlock js/hljs block))))
+
+(defn force-hash-nav!
+  []
+  (let [h (aget js/location "hash")]
+    (aset js/location "hash" "")
+    (aset js/location "hash" h)))
+
 (defn re-render
   []
   (let [e (. js/document (getElementById "app"))]
     (aset e "innerHTML" (page)))
-  (.each (js/$ "pre code")
-    (fn [i block]
-      (.highlightBlock js/hljs block))))
+  (highlight-code!)
+  (force-hash-nav!))
 
 (defn get-async
   [url res-format]
