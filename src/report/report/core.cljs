@@ -8,7 +8,8 @@
     [hiccups.runtime]
     [figwheel.client :as fw]
     [ajax.core :refer [GET]]
-    [markdown.core :refer [md->html]]))
+    [markdown.core :refer [md->html]]
+    [cljsjs.jquery]))
 
 (enable-console-print!)
 

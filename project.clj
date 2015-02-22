@@ -12,7 +12,8 @@
                  [fipp "0.5.2"]
                  [figwheel "0.2.3-SNAPSHOT"]
                  [cljs-ajax "0.3.10"]
-                 [markdown-clj "0.9.62"]]
+                 [markdown-clj "0.9.62"]
+                 [cljsjs/jquery "1.9.0-0"]]
 
   :plugins [[lein-cljsbuild "1.0.4"]
             [lein-figwheel "0.2.3-SNAPSHOT"]]
