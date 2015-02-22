@@ -47,12 +47,17 @@
        [:td (file-toc-section filename defs)])]]])
 
 (defn func-head
-  [form]
-  (let [name- (:key form)
-        filename (:filename form)
-        lines (join "-" (:lines form))]
-    [:div.func-head
-     [:span.func-name name-] " @ " filename " : " lines]))
+  ([form] (func-head form false))
+  ([form create-anchor?]
+   (let [name- (:key form)
+         filename (:filename form)
+         lines (join "-" (:lines form))
+         name-content [:span.func-name name-]]
+     [:div.func-head
+      (if create-anchor?
+        [:a.def-anchor {:name name- :href (str "#" name-)} name-content]
+        name-content)
+      " @ " filename " : " lines])))
 
 (defn code-block
   [form]
@@ -71,7 +76,7 @@
         ports (map #(get-in forms [:cljs %]) port-names)]
     (list
       [:tr.header
-       [:td [:a {:name orig-name} (func-head orig)]]
+       [:td (func-head orig true)]
        [:td (map func-head ports)]]
       [:tr.code
        [:td (code-block orig)]

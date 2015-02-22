@@ -181,6 +181,21 @@ table.code-compare-table .func-head {
   color: #AAA;
 }
 
+a.def-anchor {
+  position: relative;
+  text-decoration: none;
+}
+
+a.def-anchor:hover:before {
+  font-family: 'FontAwesome';
+  line-height: 19px;
+  color: #AAA;
+  position: absolute;
+  left: -20px;
+  /* hex codes here: http://fortawesome.github.io/Font-Awesome/cheatsheet/ */
+  content: "\f0c1";
+}
+
 table.code-block td.lines code {
   text-align: right;
   color: #CCC;
