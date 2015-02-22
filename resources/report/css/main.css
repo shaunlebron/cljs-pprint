@@ -15,7 +15,7 @@ pre code {
 /*****************************************************/
 
 div.header {
-  padding:80px;
+  padding:40px 80px;
   width: 840px;
 }
 
@@ -23,12 +23,22 @@ div.header h1 {
   font-family: 'Roboto Slab', serif;
   font-weight: 300;
   color: #333;
+  margin-bottom: 0;
 }
 
-div.header p {
+div.header p,
+div.header li {
   color: #888;
   max-width: 800px;
   line-height: 1.6em;
+}
+
+div.header li {
+  list-style-type: square;
+}
+
+div.header p:nth-child(2) {
+  margin-top: 0;
 }
 
 div.header p b {

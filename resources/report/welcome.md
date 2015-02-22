@@ -1,5 +1,7 @@
 # ClojureScript needs a __pretty printer__
 
+&lt;<http://github.com/shaunlebron/cljs-pprint>&gt;
+
 ```clojure
 ;; ugly
 user=> data
@@ -28,25 +30,29 @@ library from Clojure to ClojureScript.  ([official tracker](http://dev.clojure.o
 
 __Why this page?__
 
-Porting clojure.pprint has been an unexpectedly large task.
-I built this page to help track the differences between the original and ported
-functions, as well as track the defs/functions left to be ported.  And to
-hopefully get help!
+Porting clojure.pprint has been an unexpectedly large task.  I built this page
+to help track the differences between the original and ported functions, as
+well as track the defs/functions left to be ported.  And to make it easier to
+involve the community.
 
 __How can I help?__
 
 You can use the progress map below to find functions to port, or use the
 side-by-side section to help review the current ports.
 
-__Alternatives?__
+__Alternative/Related projects?__
 
-Not yet, but [fipp](https://github.com/brandonbloom/fipp) is a faster, more
-idiomatic EDN printer being
-[ported](https://github.com/brandonbloom/fipp/issues/7) to ClojureScript,
-albeit it has less features than clojure.pprint. Also check out
-[cljs-devtools](https://github.com/binaryage/cljs-devtools), an awesome work in
-progress for inspecting ClojureScript data in the Chrome console. And
-[pretty-print.net](https://github.com/comamitc/pretty-print.net) is another
-work in progress that will allow you to pretty-print pasted EDN online.
+- [fipp](https://github.com/brandonbloom/fipp) is a faster, more idiomatic, less featured EDN
+  printer being [ported](https://github.com/brandonbloom/fipp/issues/7) to
+  ClojureScript.
+- [cljs-devtools](https://github.com/binaryage/cljs-devtools) is
+  a work in progress for inspecting ClojureScript data in the Chrome
+  console.
+- [pretty-print.net](https://github.com/comamitc/pretty-print.net)
+  is an upcoming service that will allow you to pretty-print pasted EDN
+  online.
+- [ankha](https://github.com/noprompt/ankha) is a data inspection component for
+  Om that allows you view and edit data.
+
 
 
