@@ -26,6 +26,10 @@ div.header h1 {
   margin-bottom: 0;
 }
 
+div.header h1 b {
+  font-weight: 400;
+}
+
 div.header p,
 div.header li {
   color: #888;
