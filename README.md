@@ -23,3 +23,10 @@ lein run
 # runs report server at http://localhost:3449
 rlwrap lein figwheel report
 ```
+
+## Report
+
+See the progress report here:
+
+[![report](report.jpg)](http://shaunlebron.github.io/cljs-pprint)
+
