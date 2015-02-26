@@ -40,13 +40,22 @@
       :optimizations :whitespace}}
 
     {:id "report"
-     :source-paths ["src/report"]
+     :source-paths ["src/report" "src/report_dev"]
      :compiler
-     {:main core
-      :output-to  "resources/report/js/report.js"
+     {:output-to  "resources/report/js/report.js"
       :output-dir "resources/report/js/out"
       :optimizations :none
-      :source-map true}}]}
+      :source-map true}}
+
+    {:id "report-prod"
+     :source-paths ["src/report"]
+     :compiler
+     {:output-to  "resources/report/js/report-prod.js"
+      :output-dir "resources/report/js/out-prod"
+      :optimizations :advanced
+      :externs ["externs/highlight.ext.js"]}}
+    
+    ]}
 
   :figwheel
   {:http-server-root "report"

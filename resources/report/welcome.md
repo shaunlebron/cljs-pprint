@@ -1,4 +1,4 @@
-# ClojureScript needs a __pretty printer__
+# ClojureScript needs a __pretty printer!__
 
 &lt;<http://github.com/shaunlebron/cljs-pprint>&gt;
 

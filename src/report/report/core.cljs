@@ -6,7 +6,6 @@
     [cljs.core.async :refer [chan <! put! close!]]
     [clojure.string :refer [join]]
     [hiccups.runtime]
-    [figwheel.client :as fw]
     [ajax.core :refer [GET]]
     [markdown.core :refer [md->html]]
     [cljsjs.jquery]))
@@ -140,8 +139,5 @@
       (set! progress (<! (get downloads "progress.edn")))
       (set! welcome  (<! (get downloads "welcome.md")))
       (re-render))))
-
-(fw/start
-  {:on-jsload main})
 
 (.addEventListener js/window "load" main)

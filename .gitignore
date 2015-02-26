@@ -2,8 +2,10 @@
 *.swp
 
 resources/report/js/out
+resources/report/js/out-prod
 resources/report/js/report.js
 resources/report/js/report.js.map
+resources/report/js/report-prod.js
 resources/report/forms.edn
 
 resources/test/out
@@ -13,3 +15,5 @@ resources/test/pprint.test.js.map
 target/
 
 figwheel_server.log
+
+hosted/
