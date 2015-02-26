@@ -1,0 +1,202 @@
+@import url(http://fonts.googleapis.com/css?family=Roboto+Slab:400,700,300);
+@import url(http://fonts.googleapis.com/css?family=Open+Sans:400,700);
+@import url(http://fonts.googleapis.com/css?family=Inconsolata);
+
+body {
+  margin: 0;
+  background-color: #f7f7f7;
+  font-family: 'Open Sans', sans-serif;
+}
+
+pre code {
+  font-family:  'Inconsolata', monospace;
+}
+
+/*****************************************************/
+
+div.header {
+  padding:40px 80px;
+  width: 840px;
+}
+
+div.header h1 {
+  font-family: 'Roboto Slab', serif;
+  font-weight: 300;
+  color: #333;
+  margin-bottom: 0;
+}
+
+div.header h1 b {
+  font-weight: 400;
+}
+
+div.header p,
+div.header li {
+  color: #888;
+  max-width: 800px;
+  line-height: 1.6em;
+}
+
+div.header li {
+  list-style-type: square;
+}
+
+div.header p:nth-child(2) {
+  margin-top: 0;
+}
+
+div.header p b {
+  color: #555;
+}
+
+div.header pre {
+  margin: 50px 0;
+  padding: 20px;
+  background-color: #fff;
+  border-top: 1px solid #EEE;
+  border-left: 1px solid #DDD;
+  border-right: 1px solid #EEE;
+  border-bottom: 1px solid #DDD;
+}
+
+div.header pre code {
+  background-color: #fff;
+}
+
+div.header h1 a {
+  font-size: 0.5em;
+  vertical-align: middle;
+}
+
+div.header a {
+  text-decoration: none;
+  color: #0074d9;
+}
+
+/*****************************************************/
+
+div.toc {
+  padding:80px;
+  background-color: #fff;
+  width: 100%;
+}
+
+div.toc h2 {
+  font-family: 'Roboto Slab', serif;
+  font-weight: 300;
+}
+
+div.toc p {
+  color: #888;
+  font-size: 0.8em;
+}
+
+div.toc .file-table {
+  margin-top: 30px;
+}
+
+div.toc .file-table > td {
+  padding-left: 20px;
+}
+
+div.toc .file-table td {
+  font-size: 0.8em;
+  color: #444;
+  vertical-align: top;
+}
+
+div.toc .def-table td {
+  list-style-type: none;
+  color: #AAA;
+}
+
+div.toc .def-table td:last-child {
+  min-width: 80px;
+}
+
+div.toc .def-table td.num {
+  text-align: right;
+  color: #CCC;
+}
+
+div.toc h3 {
+  font-family: 'Roboto Slab', serif;
+  font-weight: normal;
+  font-size: 0.93em;
+}
+
+.toc-link {
+  text-decoration: none;
+  color: #45C05A;
+}
+
+/*****************************************************/
+
+div.code-compare-section {
+}
+
+table.code-compare-table {
+  border-collapse: collapse;
+}
+
+table.code-compare-table tr.header-row td h1 {
+  font-family: 'Roboto Slab', serif;
+  font-size: 2em;
+  font-weight: 300;
+  color: #333;
+  margin-bottom: 0;
+}
+
+table.code-compare-table tr.header-row td {
+  color: #777;
+}
+
+table.code-compare-table > tbody > tr > td:first-child {
+  padding-left: 80px;
+}
+
+table.code-compare-table > tbody > tr > td {
+  padding: 40px 20px;
+  color: #555;
+  font-size: 0.9em;
+  vertical-align: top;
+}
+
+table.code-compare-table tr.header {
+  border-top: 4px solid #fff;
+}
+
+table.code-compare-table tr.header > td {
+  padding-bottom: 0;
+}
+
+table.code-compare-table .func-name {
+  color: #333;
+  font-size: 1.2em;
+  font-weight: bold;
+  font-family: 'Inconsolata', monospace;
+}
+
+table.code-compare-table .func-head {
+  color: #AAA;
+}
+
+a.def-anchor {
+  position: relative;
+  text-decoration: none;
+}
+
+a.def-anchor:hover:before {
+  font-family: 'FontAwesome';
+  line-height: 19px;
+  color: #AAA;
+  position: absolute;
+  left: -20px;
+  /* hex codes here: http://fortawesome.github.io/Font-Awesome/cheatsheet/ */
+  content: "\f0c1";
+}
+
+table.code-block td.lines code {
+  text-align: right;
+  color: #CCC;
+}
