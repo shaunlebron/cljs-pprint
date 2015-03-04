@@ -42,7 +42,7 @@ side-by-side section to help review the current ports.
 
 __Alternative/Related projects?__
 
-- [pretty-print.net](https://github.com/comamitc/pretty-print.net) an online Clojure/EDN pretty-printer
+- [pretty-print.net](http://pretty-print.net) an online Clojure/EDN pretty-printer
 - [fipp](https://github.com/brandonbloom/fipp) is a faster, more idiomatic, less featured EDN
   printer being [ported](https://github.com/brandonbloom/fipp/issues/7) to
   ClojureScript.
