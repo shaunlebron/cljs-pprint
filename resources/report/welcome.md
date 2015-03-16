@@ -38,7 +38,8 @@ involve the community.
 __How can I help?__
 
 You can use the progress map below to find functions to port, or use the
-side-by-side section to help review the current ports.
+side-by-side section to help review the current ports.  Be sure to fill out the
+Clojure [Contributor Agreement](http://clojure.org/contributing).
 
 __Alternative/Related projects?__
 
