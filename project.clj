@@ -16,7 +16,8 @@
                  [cljsjs/jquery "1.9.0-0"]]
 
   :plugins [[lein-cljsbuild "1.0.4"]
-            [lein-figwheel "0.2.3-SNAPSHOT"]]
+            [lein-figwheel "0.2.3-SNAPSHOT"]
+            [com.cemerick/clojurescript.test "0.3.3"]]
 
   :source-paths ["src/parse"]
   :main parse.core
@@ -28,7 +29,7 @@
                   "resources/report/js/report.js"]
 
   :cljsbuild
-  {:test-commands {"test" ["phantomjs" "resources/test/unit-test.js" "resources/test/unit-test.html"]}
+  {:test-commands {"test" ["phantomjs" :runner "resources/test/pprint.test.js"]}
 
    :builds
    [{:id "test"
