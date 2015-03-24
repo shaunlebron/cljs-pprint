@@ -20,4 +20,5 @@
  "c-write-char"           :same-name
  "column-writer"          :same-name
  "logical-block"          :same-name
- "write-initial-lines"    :same-name}
+ "write-initial-lines"    :same-name
+ "get-miser-width"        :same-name}

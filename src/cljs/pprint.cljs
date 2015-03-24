@@ -135,6 +135,12 @@ levels of nesting.",
 ;;======================================================================
 
 ;;----------------------------------------------------------------------
+;; Forward declarations
+;;----------------------------------------------------------------------
+
+(declare get-miser-width)
+
+;;----------------------------------------------------------------------
 ;; DATA STRUCTURES
 ;;
 ;X  defstruct logical-block :parent :section :start-col :indent
@@ -306,6 +312,9 @@ levels of nesting.",
 ;; defn- set-miser-width
 ;; defn- set-logical-block-callback
 
+
+(defn- get-miser-width [this]
+  (getf :miser-width))
 
 ;;======================================================================
 ;; Simple Dispatch
