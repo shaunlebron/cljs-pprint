@@ -9,11 +9,11 @@
 (defmacro with-pretty-writer [base-writer & body]
   `(let [base-writer# ~base-writer
          new-writer# (not (pretty-writer? base-writer#))]
-     (binding [*out* (if new-writer#
-                      (make-pretty-writer base-writer# *print-right-margin* *print-miser-width*)
-                      base-writer#)]
+     (binding [~'*out* (if new-writer#
+                         (make-pretty-writer base-writer# *print-right-margin* *print-miser-width*)
+                         base-writer#)]
        ~@body
-       (-ppflush *out*))))
+       (-ppflush ~'*out*))))
 
 
 (defmacro getf

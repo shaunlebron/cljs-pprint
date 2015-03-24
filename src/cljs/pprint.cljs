@@ -12,8 +12,8 @@
     [clojure.pprint :refer [with-pretty-writer getf setf deftype]])
   (:require
     [cljs.core :refer [IWriter IDeref]]
-    [clojure.string :as string]
-    ))
+    [clojure.string :as string])
+  (:import goog.string.StringBuffer))
 
 (def ^:dynamic *out* nil)
 
@@ -599,7 +599,8 @@ radix specifier is in the form #XXr where XX is the decimal value of *print-base
 ;X defn- pretty-writer
 
 (defn- pretty-writer [writer max-columns miser-width]
-  (let [lb (logical-block. nil nil (atom 0) (atom 0) (atom false) (atom false))
+  (let [lb (logical-block. nil nil (atom 0) (atom 0) (atom false) (atom false)
+                           nil nil nil nil)
         ; NOTE: may want to just `specify!` #js { ... fields ... } with the protocols
         fields (atom {:pretty-writer true
                       :base (column-writer writer max-columns)
@@ -619,12 +620,11 @@ radix specifier is in the form #XXr where XX is the decimal value of *print-base
 
       IWriter
       (-write [this x]
-        ;;     (prlabel write x (getf :mode))
         (condp = (type x)
           js/String
           (let [s0 (write-initial-lines this x)
                 s (string/replace-first s0 #"\s+$" "")
-                white-space (string/subs s0 (count s))
+                white-space (subs s0 (count s))
                 mode (getf :mode)]
             (if (= mode :writing)
               (do
@@ -780,7 +780,7 @@ radix specifier is in the form #XXr where XX is the decimal value of *print-base
 
 (defn- pretty-writer?
   "Return true iff x is a PrettyWriter"
-  [x] (and (instance? IDeref x) (:pretty-writer @@x)))
+  [x] (and (satisfies? IDeref x) (:pretty-writer @@x)))
 
 (defn- make-pretty-writer
   "Wrap base-writer in a PrettyWriter with the specified right-margin and miser-width"
