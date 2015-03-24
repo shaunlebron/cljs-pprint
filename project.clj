@@ -22,11 +22,11 @@
   :source-paths ["src/parse"]
   :main parse.core
 
-  :clean-targets ["resources/test/out"
-                  "resources/test/pprint.test.js"
-                  "resources/test/pprint.test.js.map"
-                  "resources/report/js/out"
-                  "resources/report/js/report.js"]
+  :clean-targets ^{:protect false} ["resources/test/out"
+                                    "resources/test/pprint.test.js"
+                                    "resources/test/pprint.test.js.map"
+                                    "resources/report/js/out"
+                                    "resources/report/js/report.js"]
 
   :cljsbuild
   {:test-commands {"test" ["phantomjs" :runner "resources/test/pprint.test.js"]}
