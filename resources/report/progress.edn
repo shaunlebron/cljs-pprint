@@ -32,4 +32,12 @@
  "write-token :buffer-blob"   :same-name
  "write-token :nl-t"          :same-name
  "write-tokens"           :same-name
+ "tokens-fit?"            :same-name
+ "linear-nl?"             :same-name
+ "miser-nl?"              :same-name
+ "emit-nl?"               :same-name
+ "emit-nl? :linear"       :same-name
+ "emit-nl? :miser"        :same-name
+ "emit-nl? :fill"         :same-name
+ "emit-nl? :mandatory"    :same-name
  }

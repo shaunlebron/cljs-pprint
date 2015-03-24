@@ -255,6 +255,47 @@ levels of nesting.",
 ;;    :mandatory
 
 ;;----------------------------------------------------------------------
+;; emit-nl? method defs for each type of new line. This makes
+;; the decision about whether to print this type of new line.
+;;----------------------------------------------------------------------
+
+(defn- tokens-fit? [this tokens]
+  (let [maxcol (get-max-column (getf :base))]
+    (or
+      (nil? maxcol)
+      (< (+ (get-column (getf :base)) (buffer-length tokens)) maxcol))))
+
+(defn- linear-nl? [this lb section]
+  (or @(:done-nl lb)
+      (not (tokens-fit? this section))))
+
+(defn- miser-nl? [this lb section]
+  (let [miser-width (get-miser-width this)
+        maxcol (get-max-column (getf :base))]
+    (and miser-width maxcol
+         (>= @(:start-col lb) (- maxcol miser-width))
+         (linear-nl? this lb section))))
+
+(defmulti ^{:private true} emit-nl? (fn [t _ _ _] (:type t)))
+
+(defmethod emit-nl? :linear [newl this section _]
+  (let [lb (:logical-block newl)]
+    (linear-nl? this lb section)))
+
+(defmethod emit-nl? :miser [newl this section _]
+  (let [lb (:logical-block newl)]
+    (miser-nl? this lb section)))
+
+(defmethod emit-nl? :fill [newl this section subsection]
+  (let [lb (:logical-block newl)]
+    (or @(:intra-block-nl lb)
+        (not (tokens-fit? this subsection))
+        (miser-nl? this lb section))))
+
+(defmethod emit-nl? :mandatory [_ _ _ _]
+  true)
+
+;;----------------------------------------------------------------------
 ;; VARIOUS SUPPORT FUNCTIONS
 ;;
 ;; defn- get-section
