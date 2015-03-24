@@ -82,4 +82,8 @@
  "level-exceeded"         :same-name
  "pprint-newline"         :same-name
  "write-out"              :same-name
+ "parse-lb-options"       :same-name
+ "pprint-logical-block"   :same-name
+ "pll-mod-body"           :same-name
+ "print-length-loop"      :same-name
  }
