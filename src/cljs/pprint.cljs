@@ -502,6 +502,57 @@ levels of nesting.",
 ;; defn- set-miser-width
 ;; defn- set-logical-block-callback
 
+(defn- start-block
+  [this prefix per-line-prefix suffix]
+  (let [lb (logical-block. (getf :logical-blocks) nil (atom 0) (atom 0)
+                           (atom false) (atom false)
+                           prefix per-line-prefix suffix nil)]
+    (setf :logical-blocks lb)
+    (if (= (getf :mode) :writing)
+      (do
+        (write-white-space this)
+        (when-let [cb (getf :logical-block-callback)] (cb :start))
+        (if prefix
+          (-write (getf :base) prefix))
+        (let [col (get-column (getf :base))]
+          (reset! (:start-col lb) col)
+          (reset! (:indent lb) col)))
+      (let [oldpos (getf :pos)
+            newpos (+ oldpos (if prefix (count prefix) 0))]
+        (setf :pos newpos)
+        (add-to-buffer this (make-start-block-t lb oldpos newpos))))))
+
+(defn- end-block [this]
+  (let [lb (getf :logical-blocks)
+        suffix (:suffix lb)]
+    (if (= (getf :mode) :writing)
+      (do
+        (write-white-space this)
+        (if suffix
+          (-write (getf :base) suffix))
+        (when-let [cb (getf :logical-block-callback)] (cb :end)))
+      (let [oldpos (getf :pos)
+            newpos (+ oldpos (if suffix (count suffix) 0))]
+        (setf :pos newpos)
+        (add-to-buffer this (make-end-block-t lb oldpos newpos))))
+    (setf :logical-blocks (:parent lb))))
+
+(defn- nl [this type]
+  (setf :mode :buffering)
+  (let [pos (getf :pos)]
+    (add-to-buffer this (make-nl-t type (getf :logical-blocks) pos pos))))
+
+(defn- indent [this relative-to offset]
+  (let [lb (getf :logical-blocks)]
+    (if (= (getf :mode) :writing)
+      (do
+        (write-white-space this)
+        (reset! (:indent lb)
+                (+ offset (condp = relative-to
+                            :block @(:start-col lb)
+                            :current (get-column (getf :base))))))
+      (let [pos (getf :pos)]
+        (add-to-buffer this (make-indent-t lb relative-to offset pos pos))))))
 
 (defn- get-miser-width [this]
   (getf :miser-width))

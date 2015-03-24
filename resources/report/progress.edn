@@ -48,4 +48,8 @@
  "write-token-string"     :same-name
  "write-line"             :same-name
  "p-write-char"           :same-name
+ "start-block"            :same-name
+ "end-block"              :same-name
+ "nl"                     :same-name
+ "indent"                 :same-name
  }
