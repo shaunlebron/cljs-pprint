@@ -165,6 +165,19 @@ levels of nesting.",
    prefix per-line-prefix suffix
    logical-block-callback])
 
+(defn- ancestor? [parent child]
+  (loop [child (:parent child)]
+    (cond
+      (nil? child) false
+      (identical? parent child) true
+      :else (recur (:parent child)))))
+
+(defn- buffer-length [l]
+  (let [l (seq l)]
+    (if l
+      (- (:end-pos (last l)) (:start-pos (first l)))
+      0)))
+
 ;;----------------------------------------------------------------------
 ;; TOKEN WRITERS
 ;;
