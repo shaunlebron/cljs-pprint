@@ -169,6 +169,15 @@ radix specifier is in the form #XXr where XX is the decimal value of *print-base
 *print-base* 10)
 
 ;;======================================================================
+;; Internal variables that keep track of where we are in the
+;; structure
+;;======================================================================
+
+(def ^:dynamic ^{:private true} *current-level* 0)
+
+(def ^:dynamic ^{:private true} *current-length* nil)
+
+;;======================================================================
 ;; Protocols
 ;;======================================================================
 

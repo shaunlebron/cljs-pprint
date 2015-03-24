@@ -15,6 +15,8 @@
  "*print-suppress-namespaces*" :same-name
  "*print-radix*"               :same-name
  "*print-base*"                :same-name
+ "*current-level*"             :same-name
+ "*current-length*"            :same-name
  "PrettyFlush"            "IPrettyFlush"
  "*default-page-width*"   :same-name
  "get-field"              :same-name
