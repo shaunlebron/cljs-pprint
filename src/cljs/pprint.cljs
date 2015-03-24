@@ -111,23 +111,24 @@ levels of nesting.",
          (-flush [_]
            (-flush writer))
          (-write
-           ([this ^chars cbuf ^Number off ^Number len]
+           ;;-write isn't multi-arity, so need different way to do this
+           #_([this ^chars cbuf ^Number off ^Number len]
             (let [writer (get-field this :base)]
               (-write writer cbuf off len)))
-           ([this x]
-            (condp = (type x)
-              js/String
-              (let [s x
-                    nl (.lastIndexOf s \newline)]
-                (if (neg? nl)
-                  (set-field this :cur (+ (get-field this :cur) (count s)))
-                  (do
-                    (set-field this :cur (- (count s) nl 1))
-                    (set-field this :line (+ (get-field this :line)
-                                             (count (filter #(= % \newline) s))))))
-                (-write ^Writer (get-field this :base) s))
-              js/Number
-              (c-write-char this x))))))))
+           [this x]
+           (condp = (type x)
+             js/String
+             (let [s x
+                   nl (.lastIndexOf s \newline)]
+               (if (neg? nl)
+                 (set-field this :cur (+ (get-field this :cur) (count s)))
+                 (do
+                   (set-field this :cur (- (count s) nl 1))
+                   (set-field this :line (+ (get-field this :line)
+                                            (count (filter #(= % \newline) s))))))
+               (-write ^Writer (get-field this :base) s))
+             js/Number
+             (c-write-char this x)))))))
 
 ;;======================================================================
 ;; Main Writer
