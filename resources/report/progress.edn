@@ -52,4 +52,12 @@
  "end-block"              :same-name
  "nl"                     :same-name
  "indent"                 :same-name
+ "map-passing-context"    :same-name
+ "consume"                :same-name
+ "consume-while"          :same-name
+ "unzip-map"              :same-name
+ "tuple-map"              :same-name
+ "rtrim"                  :same-name
+ "ltrim"                  :same-name
+ "prefix-count"           :same-name
  }
