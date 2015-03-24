@@ -78,4 +78,7 @@
  "start-block-t"          :same-name
  "end-block-t"            :same-name
  "indent-t"               :same-name
+ "check-enumerated-arg"   :same-name
+ "level-exceeded"         :same-name
+ "pprint-newline"         :same-name
  }

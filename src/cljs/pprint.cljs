@@ -719,6 +719,33 @@ radix specifier is in the form #XXr where XX is the decimal value of *print-base
   (getf :miser-width))
 
 ;;======================================================================
+;; Helpers
+;;======================================================================
+
+;; pprint-logical-block
+;; pprint-newline
+;; pprint-length-loop
+
+(defn- check-enumerated-arg [arg choices]
+  (if-not (choices arg)
+    ;; TODO clean up choices string
+    (throw (js/Error. (str "Bad argument: " arg ". It must be one of " choices)))))
+
+(defn- level-exceeded []
+  (and *print-level* (>= *current-level* *print-level*)))
+
+(defn pprint-newline
+  "Print a conditional newline to a pretty printing stream. kind specifies if the
+  newline is :linear, :miser, :fill, or :mandatory.
+
+  This function is intended for use when writing custom dispatch functions.
+
+  Output is sent to *out* which must be a pretty printing writer."
+  [kind]
+  (check-enumerated-arg kind #{:linear :miser :fill :mandatory})
+  (nl *out* kind))
+
+;;======================================================================
 ;; Simple Dispatch
 ;;======================================================================
 
