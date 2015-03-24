@@ -17,3 +17,6 @@ target/
 figwheel_server.log
 
 hosted/
+
+.idea/
+*.iml

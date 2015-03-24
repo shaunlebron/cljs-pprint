@@ -5,9 +5,18 @@
  "pprint"                 ["pprint*" "pprint-sb" "pprint-str" "pprint"]
  "pretty-writer?"         :same-name
  "make-pretty-writer"     :same-name
- "*print-right-margin*"   :same-name
- "*print-miser-width*"    :same-name
- "*print-pretty*"         :same-name
+ "*print-right-margin*"        :same-name
+ "*print-miser-width*"         :same-name
+ "*print-pretty*"              :same-name
+ "*print-pprint-dispatch*"     :same-name
+ "*print-lines*"               :same-name
+ "*print-circle*"              :same-name
+ "*print-shared*"              :same-name
+ "*print-suppress-namespaces*" :same-name
+ "*print-radix*"               :same-name
+ "*print-base*"                :same-name
+ "*current-level*"             :same-name
+ "*current-length*"            :same-name
  "PrettyFlush"            "IPrettyFlush"
  "*default-page-width*"   :same-name
  "get-field"              :same-name
@@ -20,4 +29,47 @@
  "c-write-char"           :same-name
  "column-writer"          :same-name
  "logical-block"          :same-name
- "write-initial-lines"    :same-name}
+ "write-initial-lines"    :same-name
+ "get-miser-width"        :same-name
+ "ancestor?"              :same-name
+ "buffer-length"          :same-name
+ "pp-newline"             :same-name
+ "write-token"            :same-name
+ "write-token :start-block-t" :same-name
+ "write-token :end-block-t"   :same-name
+ "write-token :indent-t"      :same-name
+ "write-token :buffer-blob"   :same-name
+ "write-token :nl-t"          :same-name
+ "write-tokens"           :same-name
+ "tokens-fit?"            :same-name
+ "linear-nl?"             :same-name
+ "miser-nl?"              :same-name
+ "emit-nl?"               :same-name
+ "emit-nl? :linear"       :same-name
+ "emit-nl? :miser"        :same-name
+ "emit-nl? :fill"         :same-name
+ "emit-nl? :mandatory"    :same-name
+ "get-section"            :same-name
+ "get-sub-section"        :same-name
+ "update-nl-state"        :same-name
+ "emit-nl"                :same-name
+ "split-at-newline"       :same-name
+ "write-token-string"     :same-name
+ "write-line"             :same-name
+ "p-write-char"           :same-name
+ "start-block"            :same-name
+ "end-block"              :same-name
+ "nl"                     :same-name
+ "indent"                 :same-name
+ "map-passing-context"    :same-name
+ "consume"                :same-name
+ "consume-while"          :same-name
+ "unzip-map"              :same-name
+ "tuple-map"              :same-name
+ "rtrim"                  :same-name
+ "ltrim"                  :same-name
+ "prefix-count"           :same-name
+ "add-to-buffer"          :same-name
+ "write-buffered-output"  :same-name
+ "write-white-space"      :same-name
+ }
