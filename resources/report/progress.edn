@@ -45,4 +45,7 @@
  "update-nl-state"        :same-name
  "emit-nl"                :same-name
  "split-at-newline"       :same-name
+ "write-token-string"     :same-name
+ "write-line"             :same-name
+ "p-write-char"           :same-name
  }

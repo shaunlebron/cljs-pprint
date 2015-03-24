@@ -359,6 +359,40 @@ levels of nesting.",
   (let [pre (seq (take-while #(not (nl-t? %)) tokens))]
     [pre (seq (drop (count pre) tokens))]))
 
+;; write-token-string is called when the set of tokens in the buffer
+;; is long than the available space on the line
+(defn- write-token-string [this tokens]
+  (let [[a b] (split-at-newline tokens)]
+    (if a (write-tokens this a false))
+    (if b
+      (let [[section remainder] (get-section b)
+            newl (first b)]
+        (let [do-nl (emit-nl? newl this section (get-sub-section b))
+              result (if do-nl
+                       (do
+                         (emit-nl this newl)
+                         (next b))
+                       b)
+              long-section (not (tokens-fit? this result))
+              result (if long-section
+                       (let [rem2 (write-token-string this section)]
+                         (if (= rem2 section)
+                           (do ; If that didn't produce any output, it has no nls
+                             ; so we'll force it
+                             (write-tokens this section false)
+                             remainder)
+                           (into [] (concat rem2 remainder))))
+                       result)]
+          result)))))
+
+(defn- write-line [this]
+  (loop [buffer (getf :buffer)]
+    (setf :buffer (into [] buffer))
+    (if (not (tokens-fit? this buffer))
+      (let [new-buffer (write-token-string this buffer)]
+        (if-not (identical? buffer new-buffer)
+          (recur new-buffer))))))
+
 ;;; If there are newlines in the string, print the lines up until the last newline,
 ;;; making the appropriate adjustments. Return the remainder of the string
 (defn- write-initial-lines
@@ -385,6 +419,18 @@ levels of nesting.",
             (-write (getf :base) prefix)))
         (setf :buffering :writing)
         (last lines)))))
+
+(defn- p-write-char [this c]
+  (if (= (getf :mode) :writing)
+    (do
+      (write-white-space this)
+      (-write (getf :base) c))
+    (if (= c \newline)
+      (write-initial-lines this \newline)
+      (let [oldpos (getf :pos)
+            newpos (inc oldpos)]
+        (setf :pos newpos)
+        (add-to-buffer this (make-buffer-blob (str (char c)) nil oldpos newpos))))))
 
 ;;----------------------------------------------------------------------
 ;; CONSTRUCTOR
