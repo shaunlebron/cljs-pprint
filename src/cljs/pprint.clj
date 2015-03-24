@@ -1,5 +1,6 @@
 
-(ns clojure.pprint)
+(ns clojure.pprint
+  (:refer-clojure :exclude [deftype]))
 
 
 ;; required the following changes:
@@ -26,3 +27,15 @@
   "Set the value of the field SYM to NEW-VAL"
   [sym new-val]
   `(swap! @~'this assoc ~sym ~new-val))
+
+(defmacro deftype
+  [type-name & fields]
+  (let [name-str (name type-name)
+        fields (map (comp symbol name) fields)]
+    `(do
+       (defrecord ~type-name [~'type-tag ~@fields])
+       (defn- ~(symbol (str "make-" name-str))
+         ~(vec fields)
+         (~(symbol (str type-name ".")) ~(keyword name-str) ~@fields))
+       (defn- ~(symbol (str name-str "?")) [x#] (= (:type-tag x#) ~(keyword name-str))))))
+

@@ -72,4 +72,10 @@
  "add-to-buffer"          :same-name
  "write-buffered-output"  :same-name
  "write-white-space"      :same-name
+ "deftype"                :same-name
+ "buffer-blob"            :same-name
+ "nl-t"                   :same-name
+ "start-block-t"          :same-name
+ "end-block-t"            :same-name
+ "indent-t"               :same-name
  }

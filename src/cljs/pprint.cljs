@@ -7,8 +7,9 @@
 ;   You must not remove this notice, or any other, from this software.
 
 (ns clojure.pprint
+  (:refer-clojure :exclude [deftype])
   (:require-macros
-    [clojure.pprint :refer [with-pretty-writer getf setf]])
+    [clojure.pprint :refer [with-pretty-writer getf setf deftype]])
   (:require
     [cljs.core :refer [IWriter IDeref]]
     [clojure.string :as string]
@@ -303,6 +304,18 @@ radix specifier is in the form #XXr where XX is the decimal value of *print-base
     (if l
       (- (:end-pos (last l)) (:start-pos (first l)))
       0)))
+
+;; A blob of characters (aka a string)
+(deftype buffer-blob :data :trailing-white-space :start-pos :end-pos)
+
+;; A newline
+(deftype nl-t :type :logical-block :start-pos :end-pos)
+
+(deftype start-block-t :logical-block :start-pos :end-pos)
+
+(deftype end-block-t :logical-block :start-pos :end-pos)
+
+(deftype indent-t :logical-block :relative-to :offset :start-pos :end-pos)
 
 ;;----------------------------------------------------------------------
 ;; TOKEN WRITERS
