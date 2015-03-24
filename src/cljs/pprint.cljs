@@ -320,8 +320,46 @@ levels of nesting.",
 ;; defn- write-initial-lines
 ;; defn- p-write-char
 
+(defn- get-section [buffer]
+  (let [nl (first buffer)
+        lb (:logical-block nl)
+        section (seq (take-while #(not (and (nl-t? %) (ancestor? (:logical-block %) lb)))
+                                 (next buffer)))]
+    [section (seq (drop (inc (count section)) buffer))]))
 
-;;; If there are newlines in the string, print the lines up until the last newline, 
+(defn- get-sub-section [buffer]
+  (let [nl (first buffer)
+        lb (:logical-block nl)
+        section (seq (take-while #(let [nl-lb (:logical-block %)]
+                                   (not (and (nl-t? %) (or (= nl-lb lb) (ancestor? nl-lb lb)))))
+                                 (next buffer)))]
+    section))
+
+(defn- update-nl-state [lb]
+  (reset! (:intra-block-nl lb) true)
+  (reset! (:done-nl lb) true)
+  (loop [lb (:parent lb)]
+    (if lb
+      (do (reset! (:done-nl lb) true)
+          (reset! (:intra-block-nl lb) true)
+          (recur (:parent lb))))))
+
+(defn- emit-nl [this nl]
+  (-write (getf :base) (pp-newline))
+  (setf :trailing-white-space nil)
+  (let [lb (:logical-block nl)
+        prefix (:per-line-prefix lb)]
+    (if prefix
+      (-write (getf :base) prefix))
+    (let [istr (apply str (repeat (- @(:indent lb) (count prefix)) \space))]
+      (-write (getf :base) istr))
+    (update-nl-state lb)))
+
+(defn- split-at-newline [tokens]
+  (let [pre (seq (take-while #(not (nl-t? %)) tokens))]
+    [pre (seq (drop (count pre) tokens))]))
+
+;;; If there are newlines in the string, print the lines up until the last newline,
 ;;; making the appropriate adjustments. Return the remainder of the string
 (defn- write-initial-lines
   [^Writer this ^String s]

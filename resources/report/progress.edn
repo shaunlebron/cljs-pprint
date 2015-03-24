@@ -40,4 +40,9 @@
  "emit-nl? :miser"        :same-name
  "emit-nl? :fill"         :same-name
  "emit-nl? :mandatory"    :same-name
+ "get-section"            :same-name
+ "get-sub-section"        :same-name
+ "update-nl-state"        :same-name
+ "emit-nl"                :same-name
+ "split-at-newline"       :same-name
  }
