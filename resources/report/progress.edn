@@ -23,4 +23,13 @@
  "write-initial-lines"    :same-name
  "get-miser-width"        :same-name
  "ancestor?"              :same-name
- "buffer-length"          :same-name}
+ "buffer-length"          :same-name
+ "pp-newline"             :same-name
+ "write-token"            :same-name
+ "write-token :start-block-t" :same-name
+ "write-token :end-block-t"   :same-name
+ "write-token :indent-t"      :same-name
+ "write-token :buffer-blob"   :same-name
+ "write-token :nl-t"          :same-name
+ "write-tokens"           :same-name
+ }

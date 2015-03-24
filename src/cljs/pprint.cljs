@@ -189,6 +189,58 @@ levels of nesting.",
 ;;    :nl-t
 ;; defn- write-tokens
 
+(def ^:private pp-newline (fn [] "\n"))
+
+(declare emit-nl)
+
+(defmulti ^{:private true} write-token #(:type-tag %2))
+
+(defmethod write-token :start-block-t [this token]
+  (when-let [cb (getf :logical-block-callback)] (cb :start))
+  (let [lb (:logical-block token)]
+    (when-let [prefix (:prefix lb)]
+      (-write (getf :base) prefix))
+    (let [col (get-column (getf :base))]
+      (reset! (:start-col lb) col)
+      (reset! (:indent lb) col))))
+
+(defmethod write-token :end-block-t [this token]
+  (when-let [cb (getf :logical-block-callback)] (cb :end))
+  (when-let [suffix (:suffix (:logical-block token))]
+    (-write (getf :base) suffix)))
+
+(defmethod write-token :indent-t [this token]
+  (let [lb (:logical-block token)]
+    (reset! (:indent lb)
+            (+ (:offset token)
+               (condp = (:relative-to token)
+                 :block @(:start-col lb)
+                 :current (get-column (getf :base)))))))
+
+(defmethod write-token :buffer-blob [this token]
+  (-write (getf :base) (:data token)))
+
+(defmethod write-token :nl-t [this token]
+  (if (or (= (:type token) :mandatory)
+          (and (not (= (:type token) :fill))
+               @(:done-nl (:logical-block token))))
+    (emit-nl this token)
+    (if-let [tws (getf :trailing-white-space)]
+      (-write (getf :base) tws)))
+  (setf :trailing-white-space nil))
+
+(defn- write-tokens [this tokens force-trailing-whitespace]
+  (doseq [token tokens]
+    (if-not (= (:type-tag token) :nl-t)
+      (if-let [tws (getf :trailing-white-space)]
+        (-write (getf :base) tws)))
+    (write-token this token)
+    (setf :trailing-white-space (:trailing-white-space token))
+    (let [tws (getf :trailing-white-space)]
+      (when (and force-trailing-whitespace tws)
+        (-write (getf :base) tws)
+        (setf :trailing-white-space nil)))))
+
 ;;----------------------------------------------------------------------
 ;; EMIT NEWLINE? FUNCTIONS
 ;;
