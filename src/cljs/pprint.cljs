@@ -466,6 +466,26 @@ levels of nesting.",
         (if-not (identical? buffer new-buffer)
           (recur new-buffer))))))
 
+;; Add a buffer token to the buffer and see if it's time to start
+;; writing
+(defn- add-to-buffer [this token]
+  (setf :buffer (conj (getf :buffer) token))
+  (if (not (tokens-fit? this (getf :buffer)))
+    (write-line this)))
+
+;; Write all the tokens that have been buffered
+(defn- write-buffered-output [this]
+  (write-line this)
+  (if-let [buf (getf :buffer)]
+    (do
+      (write-tokens this buf true)
+      (setf :buffer []))))
+
+(defn- write-white-space [this]
+  (when-let [tws (getf :trailing-white-space)]
+    (-write (getf :base) tws)
+    (setf :trailing-white-space nil)))
+
 ;;; If there are newlines in the string, print the lines up until the last newline,
 ;;; making the appropriate adjustments. Return the remainder of the string
 (defn- write-initial-lines

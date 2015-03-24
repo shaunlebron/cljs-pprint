@@ -60,4 +60,7 @@
  "rtrim"                  :same-name
  "ltrim"                  :same-name
  "prefix-count"           :same-name
+ "add-to-buffer"          :same-name
+ "write-buffered-output"  :same-name
+ "write-white-space"      :same-name
  }
