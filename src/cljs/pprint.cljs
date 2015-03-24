@@ -124,6 +124,50 @@ levels of nesting.",
  ^{:doc "Bind to true if you want write to use pretty printing"}
  *print-pretty* true)
 
+(defonce ^:dynamic
+^{:doc "The pretty print dispatch function. Use with-pprint-dispatch or
+set-pprint-dispatch to modify."
+  :added "1.2"}
+*print-pprint-dispatch* nil)
+
+;;; TODO implement output limiting
+(def ^:dynamic
+^{:private true,
+  :doc "Maximum number of lines to print in a pretty print instance (N.B. This is not yet used)"}
+*print-lines* nil)
+
+;;; TODO: implement circle and shared
+(def ^:dynamic
+^{:private true,
+  :doc "Mark circular structures (N.B. This is not yet used)"}
+*print-circle* nil)
+
+;;; TODO: should we just use *print-dup* here?
+(def ^:dynamic
+^{:private true,
+  :doc "Mark repeated structures rather than repeat them (N.B. This is not yet used)"}
+*print-shared* nil)
+
+(def ^:dynamic
+^{:doc "Don't print namespaces with symbols. This is particularly useful when
+pretty printing the results of macro expansions"
+  :added "1.2"}
+*print-suppress-namespaces* nil)
+
+;;; TODO: support print-base and print-radix in cl-format
+;;; TODO: support print-base and print-radix in rationals
+(def ^:dynamic
+^{:doc "Print a radix specifier in front of integers and rationals. If *print-base* is 2, 8,
+or 16, then the radix specifier used is #b, #o, or #x, respectively. Otherwise the
+radix specifier is in the form #XXr where XX is the decimal value of *print-base* "
+  :added "1.2"}
+*print-radix* nil)
+
+(def ^:dynamic
+^{:doc "The base to use for printing integers and rationals."
+  :added "1.2"}
+*print-base* 10)
+
 ;;======================================================================
 ;; Protocols
 ;;======================================================================

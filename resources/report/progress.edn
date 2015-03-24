@@ -5,9 +5,16 @@
  "pprint"                 ["pprint*" "pprint-sb" "pprint-str" "pprint"]
  "pretty-writer?"         :same-name
  "make-pretty-writer"     :same-name
- "*print-right-margin*"   :same-name
- "*print-miser-width*"    :same-name
- "*print-pretty*"         :same-name
+ "*print-right-margin*"        :same-name
+ "*print-miser-width*"         :same-name
+ "*print-pretty*"              :same-name
+ "*print-pprint-dispatch*"     :same-name
+ "*print-lines*"               :same-name
+ "*print-circle*"              :same-name
+ "*print-shared*"              :same-name
+ "*print-suppress-namespaces*" :same-name
+ "*print-radix*"               :same-name
+ "*print-base*"                :same-name
  "PrettyFlush"            "IPrettyFlush"
  "*default-page-width*"   :same-name
  "get-field"              :same-name
