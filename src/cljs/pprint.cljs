@@ -8,7 +8,7 @@
 
 (ns clojure.pprint
   (:require-macros
-    [clojure.pprint :refer [with-pretty-writer]])
+    [clojure.pprint :refer [with-pretty-writer getf setf]])
   (:require
     [cljs.core :refer [IWriter IDeref]]
     [clojure.string :as string]
