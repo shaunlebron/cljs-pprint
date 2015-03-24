@@ -81,4 +81,5 @@
  "check-enumerated-arg"   :same-name
  "level-exceeded"         :same-name
  "pprint-newline"         :same-name
+ "write-out"              :same-name
  }

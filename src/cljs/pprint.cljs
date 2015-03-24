@@ -787,6 +787,30 @@ radix specifier is in the form #XXr where XX is the decimal value of *print-base
   [base-writer right-margin miser-width]
   (pretty-writer base-writer right-margin miser-width))
 
+(defn write-out
+  "Write an object to *out* subject to the current bindings of the printer control
+variables. Use the kw-args argument to override individual variables for this call (and
+any recursive calls).
+
+*out* must be a PrettyWriter if pretty printing is enabled. This is the responsibility
+of the caller.
+
+This method is primarily intended for use by pretty print dispatch functions that
+already know that the pretty printer will have set up their environment appropriately.
+Normal library clients should use the standard \"write\" interface. "
+  [object]
+  (let [length-reached (and *current-length*
+                            *print-length*
+                            (>= *current-length* *print-length*))]
+    (if-not *print-pretty*
+      (pr object) ;;TODO this needs to go to *out* I think
+      (if length-reached
+        (-write *out* "...") ;;TODO could this (incorrectly) print ... on the next line?
+        (do
+          (if *current-length* (set! *current-length* (inc *current-length*)))
+          (*print-pprint-dispatch* object))))
+    length-reached))
+
 (defn pprint*
   "Pretty-print to an IWriter instance."
   ([object] (throw (js/Error. (str "Cannot default pprint* writer to *out* (not yet implemented)"))))
