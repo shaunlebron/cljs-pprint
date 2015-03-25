@@ -1,10 +1,10 @@
-(ns clojure.test-clojure.pprint
+(ns cljs.pprint-test
   (:require
     [cemerick.cljs.test :as t]
-    [clojure.pprint :refer [pprint]])
+    [cljs.pprint :refer [pprint]])
   (:require-macros
     [cemerick.cljs.test :refer [deftest is]]
-    [pprint-test :refer [simple-tests]]))
+    [cljs.pprint-test :refer [simple-tests]]))
 
 (simple-tests print-length-tests
   (binding [*print-length* 1] (with-out-str (pprint '(a b c d e f))))

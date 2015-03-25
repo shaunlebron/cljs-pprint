@@ -6,10 +6,10 @@
 ;   the terms of this license.
 ;   You must not remove this notice, or any other, from this software.
 
-(ns clojure.pprint
+(ns cljs.pprint
   (:refer-clojure :exclude [deftype])
   (:require-macros
-    [clojure.pprint :refer [with-pretty-writer getf setf deftype]])
+    [cljs.pprint :refer [with-pretty-writer getf setf deftype]])
   (:require
     [cljs.core :refer [IWriter IDeref]]
     [clojure.string :as string])

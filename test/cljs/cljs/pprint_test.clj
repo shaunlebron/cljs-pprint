@@ -1,4 +1,4 @@
-(ns pprint-test
+(ns cljs.pprint-test
   (:require
     [cemerick.cljs.test :refer [deftest is]]))
 
