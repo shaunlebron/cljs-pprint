@@ -747,23 +747,6 @@ radix specifier is in the form #XXr where XX is the decimal value of *print-base
   (nl *out* kind))
 
 ;;======================================================================
-;; Simple Dispatch
-;;======================================================================
-
-;; defn- pprint-simple-list
-;; defn- pprint-list
-;; defn- pprint-vector
-;; defn- pprint-array
-;; defn- pprint-map
-;; defn- pprint-set
-;; defn- pprint-pqueue
-;; defn- pprint-ideref
-;; defn- pprint-simple-default
-;;
-;; defmulti simple-dispatch
-
-
-;;======================================================================
 ;; Helpers
 ;;======================================================================
 
@@ -812,30 +795,70 @@ Normal library clients should use the standard \"write\" interface. "
           (*print-pprint-dispatch* object))))
     length-reached))
 
-(defn pprint*
-  "Pretty-print to an IWriter instance."
-  ([object] (throw (js/Error. (str "Cannot default pprint* writer to *out* (not yet implemented)"))))
-  ([object writer]
-     (with-pretty-writer writer
-       (binding [*print-pretty* true]
-         (write-out object)))))
-
-(defn pprint-sb
-  "Get pretty-printed string buffer."
-  [object]
-  (let [sb (StringBuffer.)
-        writer (StringBufferWriter. sb)]
-    (pprint* object writer)
-    (-flush writer)
-    sb))
-
-(defn pprint-str
-  "Get pretty-printed string."
-  [object]
-  (str (pprint-sb object)))
-
 (defn pprint
-  "Pretty-print to the *print-fn*."
-  [object]
-  (*print-fn* (pprint-str object)))
+  ([object]
+   (let [sb (StringBuffer.)]
+     (binding [*out* (StringBufferWriter. sb)]
+       (pprint object *out*)
+       (*print-fn* (str sb)))))
+  ([object writer]
+   (with-pretty-writer writer
+                       (binding [*print-pretty* true]
+                         (write-out object))
+                       (if (not (= 0 (get-column *out*)))
+                         (-write *out* \newline)))))
 
+(defn set-pprint-dispatch
+  [function]
+  (set! *print-pprint-dispatch* function)
+  nil)
+
+;;======================================================================
+;; Simple Dispatch
+;;======================================================================
+
+;; defn- pprint-simple-list
+;; defn- pprint-list
+;; defn- pprint-vector
+;; defn- pprint-array
+;; defn- pprint-map
+;; defn- pprint-set
+;; defn- pprint-pqueue
+;; defn- pprint-ideref
+;; defn- pprint-simple-default
+;;
+;; defmulti simple-dispatch
+
+(defn- use-method
+  "Installs a function as a new method of multimethod associated with dispatch-value. "
+  [multifn dispatch-val func]
+  (-add-method multifn dispatch-val func))
+
+(defmulti simple-dispatch
+  "The pretty print dispatch function for simple data structure format."
+  (fn [obj]
+    (cond
+      (list? obj) :list
+      (map? obj) :map
+      (vector? obj) :vector
+      (nil? obj) nil
+      :default :default)))
+
+(defn- pprint-list [alis]
+  (pprint-logical-block :prefix "(" :suffix ")"
+    (print-length-loop [alis (seq alis)]
+      (when alis
+        (write-out (first alis))
+        (when (next alis)
+          (-write *out* " ")
+          (pprint-newline :linear)
+          (recur (next alis)))))))
+
+(defn- pprint-simple-default [obj]
+  ;;TODO: Update to handle arrays (?) and suppressing namespaces
+  (-write *out* (pr-str obj)))
+
+(use-method simple-dispatch :list pprint-list)
+(use-method simple-dispatch :default pprint-simple-default)
+
+(set-pprint-dispatch simple-dispatch)
