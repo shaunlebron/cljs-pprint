@@ -57,17 +57,17 @@
   and :suffix."
   [& args]
   (let [[options body] (parse-lb-options #{:prefix :per-line-prefix :suffix} args)]
-    `(do (if (#'cljs.pprint/level-exceeded)
-           (~'-write ~'*out* "#")
+    `(do (if (cljs.pprint/level-exceeded)
+           (~'-write cljs.pprint/*out* "#")
            (do
-             (binding [#'cljs.pprint/*current-level* (inc #'cljs.pprint/*current-level*)
-                       #'cljs.pprint/*current-length* 0]
-               (#'cljs.pprint/start-block #'cljs.pprint/*out*
-                                             ~(:prefix options)
-                                             ~(:per-line-prefix options)
-                                             ~(:suffix options))
+             (binding [cljs.pprint/*current-level* (inc cljs.pprint/*current-level*)
+                       cljs.pprint/*current-length* 0]
+               (cljs.pprint/start-block cljs.pprint/*out*
+                                        ~(:prefix options)
+                                        ~(:per-line-prefix options)
+                                        ~(:suffix options))
                ~@body
-               (#'cljs.pprint/end-block #'cljs.pprint/*out*))))
+               (cljs.pprint/end-block cljs.pprint/*out*))))
          nil)))
 
 (defn- pll-mod-body [var-sym body]
@@ -88,7 +88,7 @@
   (let [count-var (gensym "length-count")
         mod-body (pll-mod-body count-var body)]
     `(loop ~(apply vector count-var 0 bindings)
-       (if (or (not #'cljs.core/*print-length*) (< ~count-var #'cljs.core/*print-length*))
+       (if (or (not cljs.core/*print-length*) (< ~count-var cljs.core/*print-length*))
          (do ~@mod-body)
-         (~'-write #'cljs.pprint/*out* "...")))))
+         (~'-write cljs.pprint/*out* "...")))))
 

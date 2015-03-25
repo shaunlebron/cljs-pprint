@@ -9,7 +9,8 @@
 (ns cljs.pprint
   (:refer-clojure :exclude [deftype])
   (:require-macros
-    [cljs.pprint :refer [with-pretty-writer getf setf deftype]])
+    [cljs.pprint :refer [with-pretty-writer getf setf deftype
+                         pprint-logical-block print-length-loop]])
   (:require
     [cljs.core :refer [IWriter IDeref]]
     [clojure.string :as string])
