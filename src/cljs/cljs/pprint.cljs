@@ -9,8 +9,8 @@
 (ns cljs.pprint
   (:refer-clojure :exclude [deftype])
   (:require-macros
-    [cljs.pprint :refer [with-pretty-writer getf setf deftype
-                         pprint-logical-block print-length-loop]])
+    [cljs.pprint :as m :refer [with-pretty-writer getf setf deftype
+                               pprint-logical-block print-length-loop]])
   (:require
     [cljs.core :refer [IWriter IDeref]]
     [clojure.string :as string])
@@ -854,11 +854,41 @@ Normal library clients should use the standard \"write\" interface. "
           (pprint-newline :linear)
           (recur (next alis)))))))
 
+(defn- pprint-vector [avec]
+  (pprint-logical-block :prefix "[" :suffix "]"
+    (print-length-loop [aseq (seq avec)]
+      (when aseq
+        (write-out (first aseq))
+        (when (next aseq)
+          (-write *out* " ")
+          (pprint-newline :linear)
+          (recur (next aseq)))))))
+
+(defn- pprint-map [amap]
+  (pprint-logical-block :prefix "{" :suffix "}"
+    (print-length-loop [aseq (seq amap)]
+      (when aseq
+        ;;compiler gets confused with nested macro if it isn't namespaced
+        ;;it tries to use clojure.pprint/pprint-logical-block for some reason
+        (m/pprint-logical-block
+          (write-out (ffirst aseq))
+          (-write *out* " ")
+          (pprint-newline :linear)
+          (set! *current-length* 0)   ;always print both parts of the [k v] pair
+          (write-out (fnext (first aseq))))
+        (when (next aseq)
+          (-write *out* ", ")
+          (pprint-newline :linear)
+          (recur (next aseq)))))))
+
 (defn- pprint-simple-default [obj]
   ;;TODO: Update to handle arrays (?) and suppressing namespaces
   (-write *out* (pr-str obj)))
 
 (use-method simple-dispatch :list pprint-list)
+(use-method simple-dispatch :vector pprint-vector)
+(use-method simple-dispatch :map pprint-map)
+(use-method simple-dispatch nil #(-write *out* (pr-str nil)))
 (use-method simple-dispatch :default pprint-simple-default)
 
 (set-pprint-dispatch simple-dispatch)
