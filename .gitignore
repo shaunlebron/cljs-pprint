@@ -20,3 +20,4 @@ hosted/
 
 .idea/
 *.iml
+*.nrepl*
