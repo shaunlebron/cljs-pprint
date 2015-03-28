@@ -2307,6 +2307,308 @@ not a pretty writer (which keeps track of columns), this function always outputs
     set-indent)
   )
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Code to manage the parameters and flags associated with each
+;; directive in the format string.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(def ^{:private true}
+     param-pattern #"^([vV]|#|('.)|([+-]?\d+)|(?=,))")
+
+(def ^{:private true}
+     special-params #{:parameter-from-args :remaining-arg-count})
+
+(defn- extract-param [[s offset saw-comma]]
+  (let [m (js/RegExp. (.-source param-pattern) "g")
+        param (.exec m s)]
+    (if param
+      (let [token-str (ffirst param)
+            remainder (subs s (.-lastIndex m))
+            new-offset (+ offset (.-lastIndex m))]
+        (if (not (= \, (nth remainder 0)))
+          [[token-str offset] [remainder new-offset false]]
+          [[token-str offset] [(subs remainder 1) (inc new-offset) true]]))
+      (if saw-comma
+        (format-error "Badly formed parameters in format directive" offset)
+        [nil [s offset]]))))
+
+(defn- extract-params [s offset]
+  (consume extract-param [s offset false]))
+
+(defn- translate-param
+  "Translate the string representation of a param to the internalized
+                                      representation"
+  [[p offset]]
+  [(cond
+     (= (.-length p) 0) nil
+     (and (= (.-length p) 1) (contains? #{\v \V} (nth p 0))) :parameter-from-args
+     (and (= (.-length p) 1) (= \# (nth p 0))) :remaining-arg-count
+     (and (= (.-length p) 2) (= \' (nth p 0))) (nth p 1)
+     true (js/parseInt p))
+   offset])
+
+(def ^{:private true}
+     flag-defs {\: :colon, \@ :at})
+
+(defn- extract-flags [s offset]
+  (consume
+    (fn [[s offset flags]]
+      (if (empty? s)
+        [nil [s offset flags]]
+        (let [flag (get flag-defs (first s))]
+          (if flag
+            (if (contains? flags flag)
+              (format-error
+                (str "Flag \"" (first s) "\" appears more than once in a directive")
+                offset)
+              [true [(subs s 1) (inc offset) (assoc flags flag [true offset])]])
+            [nil [s offset flags]]))))
+    [s offset {}]))
+
+(defn- check-flags [def flags]
+  (let [allowed (:flags def)]
+    (if (and (not (:at allowed)) (:at flags))
+      (format-error (str "\"@\" is an illegal flag for format directive \"" (:directive def) "\"")
+                    (nth (:at flags) 1)))
+    (if (and (not (:colon allowed)) (:colon flags))
+      (format-error (str "\":\" is an illegal flag for format directive \"" (:directive def) "\"")
+                    (nth (:colon flags) 1)))
+    (if (and (not (:both allowed)) (:at flags) (:colon flags))
+      (format-error (str "Cannot combine \"@\" and \":\" flags for format directive \""
+                         (:directive def) "\"")
+                    (min (nth (:colon flags) 1) (nth (:at flags) 1))))))
+
+(defn- map-params
+  "Takes a directive definition and the list of actual parameters and
+a map of flags and returns a map of the parameters and flags with defaults
+filled in. We check to make sure that there are the right types and number
+of parameters as well."
+  [def params flags offset]
+  (check-flags def flags)
+  (if (> (count params) (count (:params def)))
+    (format-error
+      (cl-format
+        nil
+        "Too many parameters for directive \"~C\": ~D~:* ~[were~;was~:;were~] specified but only ~D~:* ~[are~;is~:;are~] allowed"
+        (:directive def) (count params) (count (:params def)))
+      (second (first params))))
+  (doall
+    (map #(let [val (first %1)]
+           (if (not (or (nil? val) (contains? special-params val)
+                        (= (second (second %2)) (type val))))
+             (format-error (str "Parameter " (name (first %2))
+                                " has bad type in directive \"" (:directive def) "\": "
+                                (type val))
+                           (second %1))) )
+         params (:params def)))
+
+  (merge                                ; create the result map
+    (into (array-map) ; start with the default values, make sure the order is right
+          (reverse (for [[name [default]] (:params def)] [name [default offset]])))
+    (reduce #(apply assoc %1 %2) {} (filter #(first (nth % 1)) (zipmap (keys (:params def)) params))) ; add the specified parameters, filtering out nils
+    flags)); and finally add the flags
+
+(defn- compile-directive [s offset]
+  (let [[raw-params [rest offset]] (extract-params s offset)
+        [_ [rest offset flags]] (extract-flags rest offset)
+        directive (first rest)
+        def (get directive-table (string/upper-case directive))
+        params (if def (map-params def (map translate-param raw-params) flags offset))]
+    (if (not directive)
+      (format-error "Format string ended in the middle of a directive" offset))
+    (if (not def)
+      (format-error (str "Directive \"" directive "\" is undefined") offset))
+    [(compiled-directive. ((:generator-fn def) params offset) def params offset)
+     (let [remainder (subs rest 1)
+           offset (inc offset)
+           trim? (and (= \newline (:directive def))
+                      (not (:colon params)))
+           trim-count (if trim? (prefix-count remainder [\space \tab]) 0)
+           remainder (subs remainder trim-count)
+           offset (+ offset trim-count)]
+       [remainder offset])]))
+
+(defn- compile-raw-string [s offset]
+  (compiled-directive. (fn [_ a _] (print s) a) nil {:string s} offset))
+
+(defn- right-bracket [this] (:right (:bracket-info (:def this))))
+
+(defn- separator? [this] (:separator (:bracket-info (:def this))))
+
+(defn- else-separator? [this]
+  (and (:separator (:bracket-info (:def this)))
+       (:colon (:params this))))
+
+(declare collect-clauses)
+
+(defn- process-bracket [this remainder]
+  (let [[subex remainder] (collect-clauses (:bracket-info (:def this))
+                                           (:offset this) remainder)]
+    [(compiled-directive.
+       (:func this) (:def this)
+       (merge (:params this) (tuple-map subex (:offset this)))
+       (:offset this))
+     remainder]))
+
+(defn- process-clause [bracket-info offset remainder]
+  (consume
+    (fn [remainder]
+      (if (empty? remainder)
+        (format-error "No closing bracket found." offset)
+        (let [this (first remainder)
+              remainder (next remainder)]
+          (cond
+            (right-bracket this)
+            (process-bracket this remainder)
+
+            (= (:right bracket-info) (:directive (:def this)))
+            [ nil [:right-bracket (:params this) nil remainder]]
+
+            (else-separator? this)
+            [nil [:else nil (:params this) remainder]]
+
+            (separator? this)
+            [nil [:separator nil nil remainder]] ;; TODO: check to make sure that there are no params on ~;
+
+            true
+            [this remainder]))))
+    remainder))
+
+(defn- collect-clauses [bracket-info offset remainder]
+  (second
+    (consume
+      (fn [[clause-map saw-else remainder]]
+        (let [[clause [type right-params else-params remainder]]
+              (process-clause bracket-info offset remainder)]
+          (cond
+            (= type :right-bracket)
+            [nil [(merge-with concat clause-map
+                              {(if saw-else :else :clauses) [clause]
+                               :right-params right-params})
+                  remainder]]
+
+            (= type :else)
+            (cond
+              (:else clause-map)
+              (format-error "Two else clauses (\"~:;\") inside bracket construction." offset)
+
+              (not (:else bracket-info))
+              (format-error "An else clause (\"~:;\") is in a bracket type that doesn't support it."
+                            offset)
+
+              (and (= :first (:else bracket-info)) (seq (:clauses clause-map)))
+              (format-error
+                "The else clause (\"~:;\") is only allowed in the first position for this directive."
+                offset)
+
+              true         ; if the ~:; is in the last position, the else clause
+              ; is next, this was a regular clause
+              (if (= :first (:else bracket-info))
+                [true [(merge-with concat clause-map {:else [clause] :else-params else-params})
+                       false remainder]]
+                [true [(merge-with concat clause-map {:clauses [clause]})
+                       true remainder]]))
+
+            (= type :separator)
+            (cond
+              saw-else
+              (format-error "A plain clause (with \"~;\") follows an else clause (\"~:;\") inside bracket construction." offset)
+
+              (not (:allows-separator bracket-info))
+              (format-error "A separator (\"~;\") is in a bracket type that doesn't support it."
+                            offset)
+
+              true
+              [true [(merge-with concat clause-map {:clauses [clause]})
+                     false remainder]]))))
+      [{:clauses []} false remainder])))
+
+(defn- process-nesting
+  "Take a linearly compiled format and process the bracket directives to give it
+   the appropriate tree structure"
+  [format]
+  (first
+    (consume
+      (fn [remainder]
+        (let [this (first remainder)
+              remainder (next remainder)
+              bracket (:bracket-info (:def this))]
+          (if (:right bracket)
+            (process-bracket this remainder)
+            [this remainder])))
+      format)))
+
+(defn- compile-format
+  "Compiles format-str into a compiled format which can be used as an argument
+to cl-format just like a plain format string. Use this function for improved
+performance when you're using the same format string repeatedly"
+  [format-str]
+  (binding [*format-str* format-str]
+    (process-nesting
+      (first
+        (consume
+          (fn [[s offset]]
+            (if (empty? s)
+              [nil s]
+              (let [tilde (.indexOf s \~)]
+                (cond
+                  (neg? tilde) [(compile-raw-string s offset) ["" (+ offset (.-length s))]]
+                  (zero? tilde) (compile-directive (subs s 1) (inc offset))
+                  true
+                  [(compile-raw-string (subs s 0 tilde) offset) [(subs s tilde) (+ tilde offset)]]))))
+          [format-str 0])))))
+
+(defn- needs-pretty
+  "determine whether a given compiled format has any directives that depend on the
+column number or pretty printing"
+  [format]
+  (loop [format format]
+    (if (empty? format)
+      false
+      (if (or (:pretty (:flags (:def (first format))))
+              (some needs-pretty (first (:clauses (:params (first format)))))
+              (some needs-pretty (first (:else (:params (first format))))))
+        true
+        (recur (next format))))))
+
+(defn- execute-format
+  "Executes the format with the arguments."
+  {:skip-wiki true}
+  ([stream format args]
+   (let [sb (StringBuffer.)
+         real-stream (cond
+                       (not stream) (StringBufferWriter. sb)
+                       (true? stream) *out*
+                       :else stream)
+         wrapped-stream (if (and (needs-pretty format)
+                                 (not (pretty-writer? real-stream)))
+                          (get-pretty-writer real-stream)
+                          real-stream)]
+     (binding [*out* wrapped-stream]
+       (try
+         (execute-format format args)
+         (finally
+           (if-not (identical? real-stream wrapped-stream)
+             (-flush wrapped-stream))))
+       (if (not stream) (str sb)))))
+  ([format args]
+   (map-passing-context
+     (fn [element context]
+       (if (abort? context)
+         [nil context]
+         (let [[params args] (realize-parameter-list
+                               (:params element) context)
+               [params offsets] (unzip-map params)
+               params (assoc params :base-args args)]
+           [nil (apply (:func element) [params args offsets])])))
+     args
+     format)
+   nil))
+
+;;; This is a bad idea, but it prevents us from leaking private symbols
+;;; This should all be replaced by really compiled formats anyway.
+(def ^{:private true} cached-compile (memoize compile-format))
+
 ;;======================================================================
 ;; dispatch.clj
 ;;======================================================================

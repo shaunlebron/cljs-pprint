@@ -169,4 +169,24 @@
  "conditional-newline"    :same-name
  "process-directive-table-element" :same-name
  "defdirectives"          :same-name
+ "param-pattern"          :same-name
+ "special-params"         :same-name
+ "extract-param"          :same-name
+ "extract-params"         :same-name
+ "translate-param"        :same-name
+ "flag-defs"              :same-name
+ "extract-flags"          :same-name
+ "check-flags"            :same-name
+ "map-params"             :same-name
+ "compile-directive"      :same-name
+ "right-bracket"          :same-name
+ "separator?"             :same-name
+ "else-separator?"        :same-name
+ "process-bracket"        :same-name
+ "process-clause"         :same-name
+ "collect-clauses"        :same-name
+ "compile-format"         :same-name
+ "needs-pretty"           :same-name
+ "execute-format"         :same-name
+ "cached-compile"         :same-name
  }
