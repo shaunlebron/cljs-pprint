@@ -99,4 +99,7 @@
  "compiled-directive"     :same-name
  "realize-parameter"      :same-name
  "realize-parameter-list" :same-name
+ "special-radix-markers"  :same-name
+ "format-simple-number"   :same-name
+ "format-ascii"           :same-name
  }

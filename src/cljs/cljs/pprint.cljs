@@ -848,6 +848,47 @@ http://www.lispworks.com/documentation/HyperSpec/Body/22_c.htm"
         (map-passing-context realize-parameter navigator parameter-map)]
     [(into {} pairs) new-navigator]))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Functions that support individual directives
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Common handling code for ~A and ~S
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(declare opt-base-str)
+
+(def ^{:private true}
+  special-radix-markers {2 "#b" 8 "#o" 16 "#x"})
+
+(defn- format-simple-number [n]
+  (cond
+    (integer? n) (if (= *print-base* 10)
+                   (str n (if *print-radix* "."))
+                   (str
+                     (if *print-radix* (or (get special-radix-markers *print-base*) (str "#" *print-base* "r")))
+                     (opt-base-str *print-base* n)))
+    ;;(ratio? n) ;;no ratio support
+    :else nil))
+
+(defn- format-ascii [print-func params arg-navigator offsets]
+  (let [[arg arg-navigator] (next-arg arg-navigator)
+        base-output (or (format-simple-number arg) (print-func arg))
+        base-width (.-length base-output)
+        min-width (+ base-width (:minpad params))
+        width (if (>= min-width (:mincol params))
+                min-width
+                (+ min-width
+                   (* (+ (quot (- (:mincol params) min-width 1)
+                               (:colinc params))
+                         1)
+                      (:colinc params))))
+        chars (apply str (repeat (- width base-width) (:padchar params)))]
+    (if (:at params)
+      (print (str chars base-output))  ;;TODO need to print to *out*
+      (print (str base-output chars))) ;;TODO need to print to *out*
+    arg-navigator))
+
 ;;======================================================================
 ;; dispatch.clj
 ;;======================================================================
