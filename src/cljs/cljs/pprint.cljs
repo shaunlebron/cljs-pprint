@@ -819,6 +819,35 @@ http://www.lispworks.com/documentation/HyperSpec/Body/22_c.htm"
 (defrecord ^{:private true}
   compiled-directive [func def params offset])
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; When looking at the parameter list, we may need to manipulate
+;; the argument list as well (for 'V' and '#' parameter types).
+;; We hide all of this behind a function, but clients need to
+;; manage changing arg navigator
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; TODO: validate parameters when they come from arg list
+(defn- realize-parameter [[param [raw-val offset]] navigator]
+  (let [[real-param new-navigator]
+        (cond
+          (contains? #{:at :colon} param) ;pass flags through unchanged - this really isn't necessary
+          [raw-val navigator]
+
+          (= raw-val :parameter-from-args)
+          (next-arg navigator)
+
+          (= raw-val :remaining-arg-count)
+          [(count (:rest navigator)) navigator]
+
+          true
+          [raw-val navigator])]
+    [[param [real-param offset]] new-navigator]))
+
+(defn- realize-parameter-list [parameter-map navigator]
+  (let [[pairs new-navigator]
+        (map-passing-context realize-parameter navigator parameter-map)]
+    [(into {} pairs) new-navigator]))
+
 ;;======================================================================
 ;; dispatch.clj
 ;;======================================================================

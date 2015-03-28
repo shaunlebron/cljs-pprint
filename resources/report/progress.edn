@@ -97,4 +97,6 @@
  "absolute-reposition"    :same-name
  "relative-reposition"    :same-name
  "compiled-directive"     :same-name
+ "realize-parameter"      :same-name
+ "realize-parameter-list" :same-name
  }
