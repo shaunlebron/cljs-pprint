@@ -143,4 +143,7 @@
  "exponential-float"      :same-name
  "general-float"          :same-name
  "dollar-float"           :same-name
+ "choice-conditional"     :same-name
+ "boolean-conditional"    :same-name
+ "check-arg-conditional"  :same-name
  }

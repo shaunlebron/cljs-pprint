@@ -1521,6 +1521,48 @@ http://www.lispworks.com/documentation/HyperSpec/Body/22_c.htm"
              full-repr))
     navigator))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Support for the '~[...~]' conditional construct in its
+;; different flavors
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; ~[...~] without any modifiers chooses one of the clauses based on the param or
+;; next argument
+;; TODO check arg is positive int
+(defn- choice-conditional [params arg-navigator offsets]
+  (let [arg (:selector params)
+        [arg navigator] (if arg [arg arg-navigator] (next-arg arg-navigator))
+        clauses (:clauses params)
+        clause (if (or (neg? arg) (>= arg (count clauses)))
+                 (first (:else params))
+                 (nth clauses arg))]
+    (if clause
+      (execute-sub-format clause navigator (:base-args params))
+      navigator)))
+
+;; ~:[...~] with the colon reads the next argument treating it as a truth value
+(defn- boolean-conditional [params arg-navigator offsets]
+  (let [[arg navigator] (next-arg arg-navigator)
+        clauses (:clauses params)
+        clause (if arg
+                 (second clauses)
+                 (first clauses))]
+    (if clause
+      (execute-sub-format clause navigator (:base-args params))
+      navigator)))
+
+;; ~@[...~] with the at sign executes the conditional if the next arg is not
+;; nil/false without consuming the arg
+(defn- check-arg-conditional [params arg-navigator offsets]
+  (let [[arg navigator] (next-arg arg-navigator)
+        clauses (:clauses params)
+        clause (if arg (first clauses))]
+    (if arg
+      (if clause
+        (execute-sub-format clause arg-navigator (:base-args params))
+        arg-navigator)
+      navigator)))
+
 ;;======================================================================
 ;; dispatch.clj
 ;;======================================================================
