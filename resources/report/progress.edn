@@ -119,4 +119,9 @@
  "format-cardinal-english" :same-name
  "format-simple-ordinal"  :same-name
  "format-ordinal-english" :same-name
+ "old-roman-table"        :same-name
+ "new-roman-table"        :same-name
+ "format-roman"           :same-name
+ "format-old-roman"       :same-name
+ "format-new-roman"       :same-name
  }
