@@ -6,13 +6,17 @@
 ;   the terms of this license.
 ;   You must not remove this notice, or any other, from this software.
 
-(ns clojure.pprint
+(ns cljs.pprint
+  (:refer-clojure :exclude [deftype])
   (:require-macros
-    [clojure.pprint :refer [with-pretty-writer getf setf]])
+    [cljs.pprint :as m :refer [with-pretty-writer getf setf deftype
+                               pprint-logical-block print-length-loop]])
   (:require
     [cljs.core :refer [IWriter IDeref]]
-    [clojure.string :as string]
-    ))
+    [clojure.string :as string])
+  (:import goog.string.StringBuffer))
+
+(def ^:dynamic *out* nil)
 
 ;;======================================================================
 ;; Utilities
@@ -304,6 +308,18 @@ radix specifier is in the form #XXr where XX is the decimal value of *print-base
       (- (:end-pos (last l)) (:start-pos (first l)))
       0)))
 
+;; A blob of characters (aka a string)
+(deftype buffer-blob :data :trailing-white-space :start-pos :end-pos)
+
+;; A newline
+(deftype nl-t :type :logical-block :start-pos :end-pos)
+
+(deftype start-block-t :logical-block :start-pos :end-pos)
+
+(deftype end-block-t :logical-block :start-pos :end-pos)
+
+(deftype indent-t :logical-block :relative-to :offset :start-pos :end-pos)
+
 ;;----------------------------------------------------------------------
 ;; TOKEN WRITERS
 ;;
@@ -584,7 +600,8 @@ radix specifier is in the form #XXr where XX is the decimal value of *print-base
 ;X defn- pretty-writer
 
 (defn- pretty-writer [writer max-columns miser-width]
-  (let [lb (logical-block. nil nil (atom 0) (atom 0) (atom false) (atom false))
+  (let [lb (logical-block. nil nil (atom 0) (atom 0) (atom false) (atom false)
+                           nil nil nil nil)
         ; NOTE: may want to just `specify!` #js { ... fields ... } with the protocols
         fields (atom {:pretty-writer true
                       :base (column-writer writer max-columns)
@@ -604,12 +621,11 @@ radix specifier is in the form #XXr where XX is the decimal value of *print-base
 
       IWriter
       (-write [this x]
-        ;;     (prlabel write x (getf :mode))
         (condp = (type x)
           js/String
           (let [s0 (write-initial-lines this x)
                 s (string/replace-first s0 #"\s+$" "")
-                white-space (string/subs s0 (count s))
+                white-space (subs s0 (count s))
                 mode (getf :mode)]
             (if (= mode :writing)
               (do
@@ -704,21 +720,31 @@ radix specifier is in the form #XXr where XX is the decimal value of *print-base
   (getf :miser-width))
 
 ;;======================================================================
-;; Simple Dispatch
+;; Helpers
 ;;======================================================================
 
-;; defn- pprint-simple-list
-;; defn- pprint-list
-;; defn- pprint-vector
-;; defn- pprint-array
-;; defn- pprint-map
-;; defn- pprint-set
-;; defn- pprint-pqueue
-;; defn- pprint-ideref
-;; defn- pprint-simple-default
-;;
-;; defmulti simple-dispatch
+;; pprint-logical-block
+;; pprint-newline
+;; pprint-length-loop
 
+(defn- check-enumerated-arg [arg choices]
+  (if-not (choices arg)
+    ;; TODO clean up choices string
+    (throw (js/Error. (str "Bad argument: " arg ". It must be one of " choices)))))
+
+(defn- level-exceeded []
+  (and *print-level* (>= *current-level* *print-level*)))
+
+(defn pprint-newline
+  "Print a conditional newline to a pretty printing stream. kind specifies if the
+  newline is :linear, :miser, :fill, or :mandatory.
+
+  This function is intended for use when writing custom dispatch functions.
+
+  Output is sent to *out* which must be a pretty printing writer."
+  [kind]
+  (check-enumerated-arg kind #{:linear :miser :fill :mandatory})
+  (nl *out* kind))
 
 ;;======================================================================
 ;; Helpers
@@ -738,37 +764,131 @@ radix specifier is in the form #XXr where XX is the decimal value of *print-base
 
 (defn- pretty-writer?
   "Return true iff x is a PrettyWriter"
-  [x] (and (instance? IDeref x) (:pretty-writer @@x)))
+  [x] (and (satisfies? IDeref x) (:pretty-writer @@x)))
 
 (defn- make-pretty-writer
   "Wrap base-writer in a PrettyWriter with the specified right-margin and miser-width"
   [base-writer right-margin miser-width]
   (pretty-writer base-writer right-margin miser-width))
 
-(defn pprint*
-  "Pretty-print to an IWriter instance."
-  ([object] (throw (js/Error. (str "Cannot default pprint* writer to *out* (not yet implemented)"))))
-  ([object writer]
-     (with-pretty-writer writer
-       (binding [*print-pretty* true]
-         (write-out object)))))
+(defn write-out
+  "Write an object to *out* subject to the current bindings of the printer control
+variables. Use the kw-args argument to override individual variables for this call (and
+any recursive calls).
 
-(defn pprint-sb
-  "Get pretty-printed string buffer."
-  [object]
-  (let [sb (StringBuffer.)
-        writer (StringBufferWriter. sb)]
-    (pprint* object writer)
-    (-flush writer)
-    sb))
+*out* must be a PrettyWriter if pretty printing is enabled. This is the responsibility
+of the caller.
 
-(defn pprint-str
-  "Get pretty-printed string."
+This method is primarily intended for use by pretty print dispatch functions that
+already know that the pretty printer will have set up their environment appropriately.
+Normal library clients should use the standard \"write\" interface. "
   [object]
-  (str (pprint-sb object)))
+  (let [length-reached (and *current-length*
+                            *print-length*
+                            (>= *current-length* *print-length*))]
+    (if-not *print-pretty*
+      (pr object) ;;TODO this needs to go to *out* I think
+      (if length-reached
+        (-write *out* "...") ;;TODO could this (incorrectly) print ... on the next line?
+        (do
+          (if *current-length* (set! *current-length* (inc *current-length*)))
+          (*print-pprint-dispatch* object))))
+    length-reached))
 
 (defn pprint
-  "Pretty-print to the *print-fn*."
-  [object]
-  (*print-fn* (pprint-str object)))
+  ([object]
+   (let [sb (StringBuffer.)]
+     (binding [*out* (StringBufferWriter. sb)]
+       (pprint object *out*)
+       (*print-fn* (str sb)))))
+  ([object writer]
+   (with-pretty-writer writer
+                       (binding [*print-pretty* true]
+                         (write-out object))
+                       (if (not (= 0 (get-column *out*)))
+                         (-write *out* \newline)))))
 
+(defn set-pprint-dispatch
+  [function]
+  (set! *print-pprint-dispatch* function)
+  nil)
+
+;;======================================================================
+;; Simple Dispatch
+;;======================================================================
+
+;; defn- pprint-simple-list
+;; defn- pprint-list
+;; defn- pprint-vector
+;; defn- pprint-array
+;; defn- pprint-map
+;; defn- pprint-set
+;; defn- pprint-pqueue
+;; defn- pprint-ideref
+;; defn- pprint-simple-default
+;;
+;; defmulti simple-dispatch
+
+(defn- use-method
+  "Installs a function as a new method of multimethod associated with dispatch-value. "
+  [multifn dispatch-val func]
+  (-add-method multifn dispatch-val func))
+
+(defmulti simple-dispatch
+  "The pretty print dispatch function for simple data structure format."
+  (fn [obj]
+    (cond
+      (list? obj) :list
+      (map? obj) :map
+      (vector? obj) :vector
+      (nil? obj) nil
+      :default :default)))
+
+(defn- pprint-list [alis]
+  (pprint-logical-block :prefix "(" :suffix ")"
+    (print-length-loop [alis (seq alis)]
+      (when alis
+        (write-out (first alis))
+        (when (next alis)
+          (-write *out* " ")
+          (pprint-newline :linear)
+          (recur (next alis)))))))
+
+(defn- pprint-vector [avec]
+  (pprint-logical-block :prefix "[" :suffix "]"
+    (print-length-loop [aseq (seq avec)]
+      (when aseq
+        (write-out (first aseq))
+        (when (next aseq)
+          (-write *out* " ")
+          (pprint-newline :linear)
+          (recur (next aseq)))))))
+
+(defn- pprint-map [amap]
+  (pprint-logical-block :prefix "{" :suffix "}"
+    (print-length-loop [aseq (seq amap)]
+      (when aseq
+        ;;compiler gets confused with nested macro if it isn't namespaced
+        ;;it tries to use clojure.pprint/pprint-logical-block for some reason
+        (m/pprint-logical-block
+          (write-out (ffirst aseq))
+          (-write *out* " ")
+          (pprint-newline :linear)
+          (set! *current-length* 0)   ;always print both parts of the [k v] pair
+          (write-out (fnext (first aseq))))
+        (when (next aseq)
+          (-write *out* ", ")
+          (pprint-newline :linear)
+          (recur (next aseq)))))))
+
+(defn- pprint-simple-default [obj]
+  ;;TODO: Update to handle arrays (?) and suppressing namespaces
+  (-write *out* (pr-str obj)))
+
+(use-method simple-dispatch :list pprint-list)
+(use-method simple-dispatch :vector pprint-vector)
+(use-method simple-dispatch :map pprint-map)
+(use-method simple-dispatch nil #(-write *out* (pr-str nil)))
+(use-method simple-dispatch :default pprint-simple-default)
+
+(set-pprint-dispatch simple-dispatch)
