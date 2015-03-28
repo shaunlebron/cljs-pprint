@@ -724,6 +724,19 @@ Normal library clients should use the standard \"write\" interface. "
   (check-enumerated-arg kind #{:linear :miser :fill :mandatory})
   (nl *out* kind))
 
+(defn pprint-indent
+  "Create an indent at this point in the pretty printing stream. This defines how
+following lines are indented. relative-to can be either :block or :current depending
+whether the indent should be computed relative to the start of the logical block or
+the current column position. n is an offset.
+
+This function is intended for use when writing custom dispatch functions.
+
+Output is sent to *out* which must be a pretty printing writer."
+  [relative-to n]
+  (check-enumerated-arg relative-to #{:block :current})
+  (indent *out* relative-to n))
+
 ;;======================================================================
 ;; cl_format.clj
 ;;======================================================================
@@ -1973,6 +1986,43 @@ not a pretty writer (which keeps track of columns), this function always outputs
         space-count (+ colrel (if (= 0 offset) 0 (- colinc offset)))]
     (print (apply str (repeat space-count \space))))  ;; TODO print to *out*
   navigator)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Support for accessing the pretty printer from a format
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; TODO: support ~@; per-line-prefix separator
+;; TODO: get the whole format wrapped so we can start the lb at any column
+(defn- format-logical-block [params navigator offsets]
+  (let [clauses (:clauses params)
+        clause-count (count clauses)
+        prefix (cond
+                 (> clause-count 1) (:string (:params (first (first clauses))))
+                 (:colon params) "(")
+        body (nth clauses (if (> clause-count 1) 1 0))
+        suffix (cond
+                 (> clause-count 2) (:string (:params (first (nth clauses 2))))
+                 (:colon params) ")")
+        [arg navigator] (next-arg navigator)]
+    (pprint-logical-block :prefix prefix :suffix suffix
+      (execute-sub-format
+        body
+        (init-navigator arg)
+        (:base-args params)))
+    navigator))
+
+(defn- set-indent [params navigator offsets]
+  (let [relative-to (if (:colon params) :current :block)]
+    (pprint-indent relative-to (:n params))
+    navigator))
+
+;;; TODO: support ~:T section options for ~T
+(defn- conditional-newline [params navigator offsets]
+  (let [kind (if (:colon params)
+               (if (:at params) :mandatory :fill)
+               (if (:at params) :miser :linear))]
+    (pprint-newline kind)
+    navigator))
 
 ;;======================================================================
 ;; dispatch.clj

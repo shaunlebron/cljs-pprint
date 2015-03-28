@@ -163,4 +163,8 @@
  "fresh-line"             :same-name
  "absolute-tabulation"    :same-name
  "relative-tabulation"    :same-name
+ "pprint-indent"          :same-name
+ "format-logical-block"   :same-name
+ "set-indent"             :same-name
+ "conditional-newline"    :same-name
  }
