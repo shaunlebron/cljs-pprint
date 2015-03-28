@@ -1748,6 +1748,157 @@ http://www.lispworks.com/documentation/HyperSpec/Body/22_c.htm"
             false))))
     navigator))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Support for case modification with ~(...~).
+;;; We do this by wrapping the underlying writer with
+;;; a special writer to do the appropriate modification. This
+;;; allows us to support arbitrary-sized output and sources
+;;; that may block.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn- downcase-writer
+  "Returns a proxy that wraps writer, converting all characters to lower case"
+  [writer]
+  (reify
+    IWriter
+    (-flush [_] (-flush writer))
+    (-write
+      ;;no multi-arity, not sure of importance
+      #_([^chars cbuf ^Integer off ^Integer len]
+             (.write writer cbuf off len))
+      [this x]
+      (condp = (type x)
+        js/String
+        (let [s x]
+          (-write writer (string/lower-case s)))
+
+        js/Number
+        (let [c x]
+          ;;TODO need to enforce integers only?
+          (-write writer (string/lower-case (char c))))))))
+
+(defn- upcase-writer
+  "Returns a proxy that wraps writer, converting all characters to upper case"
+  [writer]
+  (reify
+    IWriter
+    (-flush [_] (-flush writer))
+    (-write
+      ;;no multi-arity, not sure of importance
+      #_([^chars cbuf ^Integer off ^Integer len]
+             (.write writer cbuf off len))
+      [this x]
+      (condp = (type x)
+        js/String
+        (let [s x]
+          (-write writer (string/upper-case s)))
+
+        js/Number
+        (let [c x]
+          ;;TODO need to enforce integers only?
+          (-write writer (string/upper-case (char c))))))))
+
+;;TODO: This is an oversimplied version. Needs to be fully implemented
+(defn- is-letter? [s]
+  (boolean
+    (#{"A" "B" "C" "D" "E" "F" "G" "H" "I" "J" "K" "L" "M" "N" "O" "P" "Q" "R" "S" "T" "U" "V" "W" "X" "Y" "Z"
+       "a" "b" "c" "d" "e" "f" "g" "h" "i" "j" "k" "l" "m" "n" "o" "p" "q" "r" "s" "t" "u" "v" "w" "x" "y" "z"}
+      s)))
+
+(defn- capitalize-string
+  "Capitalizes the words in a string. If first? is false, don't capitalize the
+                                      first character of the string even if it's a letter."
+  [s first?]
+  (let [f (first s)
+        s (if (and first? f (is-letter? f))
+            (str (string/upper-case f) (subs s 1))
+            s)]
+    (apply str
+           (first
+             (consume
+               (fn [s]
+                 (if (empty? s)
+                   [nil nil]
+                   (let [m (.exec (js/RegExp "\\W\\w" "g") s)
+                         offset (and m (inc (.-index m)))]
+                     (if offset
+                       [(str (subs s 0 offset)
+                             (string/upper-case (nth s offset)))
+                        (subs s (inc offset))]
+                       [s nil]))))
+               s)))))
+
+;;TODO: This is an oversimplied version. Needs to be fully implemented
+(defn- is-whitespace? [s]
+  (boolean
+    (#{\space \newline} s)))
+
+(defn- capitalize-word-writer
+  "Returns a proxy that wraps writer, capitalizing all words"
+  [writer]
+  (let [last-was-whitespace? (atom true)]
+    (reify
+      IWriter
+      (-flush [_] (-flush writer))
+      (-write
+        ;;no multi-arity
+        #_([^chars cbuf ^Integer off ^Integer len]
+               (.write writer cbuf off len))
+        [this x]
+        (condp = (type x)
+          js/String
+          (let [s x]
+            (-write writer
+                    (capitalize-string (.toLowerCase s) @last-was-whitespace?))
+            (when (pos? (.-length s))
+              (reset! last-was-whitespace? (is-whitespace? (nth s (dec (count s)))))))
+
+          js/Number
+          (let [c (char x)]
+            (let [mod-c (if @last-was-whitespace? (string/upper-case c) c)]
+              (-write writer mod-c)
+              (reset! last-was-whitespace? (is-whitespace? c)))))))))
+
+(defn- init-cap-writer
+  "Returns a proxy that wraps writer, capitalizing the first word"
+  [writer]
+  (let [capped (atom false)]
+    (reify
+      IWriter
+      (-flush [_] (-flush writer))
+      (-write
+        ;;no multi-arity
+        #_([^chars cbuf ^Integer off ^Integer len]
+                    (.write writer cbuf off len))
+        [this x]
+        (condp = (type x)
+          js/String
+          (let [s (string/lower-case x)]
+            (if (not @capped)
+              (let [m (.exec (js/RegExp "\\S" "g") s)
+                    offset (and m (inc (.-index m)))]
+                (if offset
+                  (do (-write writer
+                              (str (subs s 0 offset)
+                                   (string/upper-case (nth s offset))
+                                   (string/lower-case (subs s (inc offset)))))
+                      (reset! capped true))
+                  (-write writer s)))
+              (-write writer (string/lower-case s))))
+
+          js/Number
+          (let [c (char x)]
+            (if (and (not @capped) (is-letter? c))
+              (do
+                (reset! capped true)
+                (-write writer (string/upper-case c)))
+              (-write writer (string/lower-case c)))))))))
+
+(defn- modify-case [make-writer params navigator offsets]
+  (let [clause (first (:clauses params))]
+    (binding [*out* (make-writer *out*)]
+      (execute-sub-format clause navigator (:base-args params)))))
+
 ;;======================================================================
 ;; dispatch.clj
 ;;======================================================================

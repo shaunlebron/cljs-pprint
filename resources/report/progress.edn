@@ -153,4 +153,10 @@
  "logical-block-or-justify" :same-name
  "render-clauses"         :same-name
  "justify-clauses"        :same-name
+ "downcase-writer"        :same-name
+ "upcase-writer"          :same-name
+ "capitalize-string"      :same-name
+ "capitalize-word-writer" :same-name
+ "init-cap-writer"        :same-name
+ "modify-case"            :same-name
  }
