@@ -1660,6 +1660,27 @@ http://www.lispworks.com/documentation/HyperSpec/Body/22_c.htm"
             navigator
             (recur (inc count) navigator)))))))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; The '~< directive has two completely different meanings
+;; in the '~<...~>' form it does justification, but with
+;; ~<...~:>' it represents the logical block operation of the
+;; pretty printer.
+;;
+;; Unfortunately, the current architecture decides what function
+;; to call at form parsing time before the sub-clauses have been
+;; folded, so it is left to run-time to make the decision.
+;;
+;; TODO: make it possible to make these decisions at compile-time.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(declare format-logical-block)
+(declare justify-clauses)
+
+(defn- logical-block-or-justify [params navigator offsets]
+  (if (:colon (:right-params params))
+    (format-logical-block params navigator offsets)
+    (justify-clauses params navigator offsets)))
+
 ;;======================================================================
 ;; dispatch.clj
 ;;======================================================================
