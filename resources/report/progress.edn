@@ -124,4 +124,10 @@
  "format-roman"           :same-name
  "format-old-roman"       :same-name
  "format-new-roman"       :same-name
+ "special-chars"          :same-name
+ "pretty-character"       :same-name
+ "readable-character"     :same-name
+ "plain-character"        :same-name
+ "abort?"                 :same-name
+ "execute-sub-format"     :same-name
  }

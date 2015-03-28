@@ -1179,6 +1179,60 @@ http://www.lispworks.com/documentation/HyperSpec/Body/22_c.htm"
 (defn- format-new-roman [params navigator offsets]
   (format-roman new-roman-table params navigator offsets))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Support for character formats (~C)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(def ^{:private true}
+     special-chars {8 "Backspace", 9 "Tab", 10 "Newline", 13 "Return", 32 "Space"})
+
+(defn- pretty-character [params navigator offsets]
+  (let [[c navigator] (next-arg navigator)
+        as-int (int c)
+        base-char (bit-and as-int 127)
+        meta (bit-and as-int 128)
+        special (get special-chars base-char)]
+    (if (> meta 0) (print "Meta-")) ;;TODO print to *out*
+    (print (cond  ;;TODO print to *out*
+             special special
+             (< base-char 32) (str "Control-" (char (+ base-char 64)))
+             (= base-char 127) "Control-?"
+             :else (char base-char)))
+    navigator))
+
+(defn- readable-character [params navigator offsets]
+  (let [[c navigator] (next-arg navigator)]
+    (condp = (:char-format params)
+      \o (cl-format true "\\o~3, '0o" (int c))
+      \u (cl-format true "\\u~4, '0x" (int c))
+      nil (pr c))  ;;TODO print to *out*
+    navigator))
+
+(defn- plain-character [params navigator offsets]
+  (let [[char navigator] (next-arg navigator)]
+    (print char)   ;;TODO print to *out*
+    navigator))
+
+;; Check to see if a result is an abort (~^) construct
+;; TODO: move these funcs somewhere more appropriate
+(defn- abort? [context]
+  (let [token (first context)]
+    (or (= :up-arrow token) (= :colon-up-arrow token))))
+
+;; Handle the execution of "sub-clauses" in bracket constructions
+(defn- execute-sub-format [format args base-args]
+  (second
+    (map-passing-context
+      (fn [element context]
+        (if (abort? context)
+          [nil context]    ; just keep passing it along
+          (let [[params args] (realize-parameter-list (:params element) context)
+                [params offsets] (unzip-map params)
+                params (assoc params :base-args base-args)]
+            [nil (apply (:func element) [params args offsets])])))
+      args
+      format)))
+
 ;;======================================================================
 ;; dispatch.clj
 ;;======================================================================
