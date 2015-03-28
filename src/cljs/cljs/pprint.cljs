@@ -803,6 +803,22 @@ http://www.lispworks.com/documentation/HyperSpec/Body/22_c.htm"
                           raw-format)]
     [compiled-format navigator]))
 
+(declare relative-reposition)
+
+(defn- absolute-reposition [navigator position]
+  (if (>= position (:pos navigator))
+    (relative-reposition navigator (- (:pos navigator) position))
+    (arg-navigator. (:seq navigator) (drop position (:seq navigator)) position)))
+
+(defn- relative-reposition [navigator position]
+  (let [newpos (+ (:pos navigator) position)]
+    (if (neg? position)
+      (absolute-reposition navigator newpos)
+      (arg-navigator. (:seq navigator) (drop position (:rest navigator)) newpos))))
+
+(defrecord ^{:private true}
+  compiled-directive [func def params offset])
+
 ;;======================================================================
 ;; dispatch.clj
 ;;======================================================================

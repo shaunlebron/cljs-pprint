@@ -94,4 +94,7 @@
  "next-arg"               :same-name
  "next-arg-or-nil"        :same-name
  "get-format-arg"         :same-name
+ "absolute-reposition"    :same-name
+ "relative-reposition"    :same-name
+ "compiled-directive"     :same-name
  }
