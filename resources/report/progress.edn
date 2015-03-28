@@ -151,4 +151,6 @@
  "iterate-main-list"      :same-name
  "iterate-main-sublists"  :same-name
  "logical-block-or-justify" :same-name
+ "render-clauses"         :same-name
+ "justify-clauses"        :same-name
  }

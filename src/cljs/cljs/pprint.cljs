@@ -1681,6 +1681,73 @@ http://www.lispworks.com/documentation/HyperSpec/Body/22_c.htm"
     (format-logical-block params navigator offsets)
     (justify-clauses params navigator offsets)))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Support for the '~<...~>' justification directive
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn- render-clauses [clauses navigator base-navigator]
+  (loop [clauses clauses
+         acc []
+         navigator navigator]
+    (if (empty? clauses)
+      [acc navigator]
+      (let [clause (first clauses)
+            [iter-result result-str] (let [sb (StringBuffer.)]
+                                       (binding [*out* (StringBufferWriter. sb)]
+                                         [(execute-sub-format clause navigator base-navigator)
+                                          (str sb)]))]
+        (if (= :up-arrow (first iter-result))
+          [acc (second iter-result)]
+          (recur (next clauses) (conj acc result-str) iter-result))))))
+
+;; TODO support for ~:; constructions
+(defn- justify-clauses [params navigator offsets]
+  (let [[[eol-str] new-navigator] (when-let [else (:else params)]
+                                    (render-clauses else navigator (:base-args params)))
+        navigator (or new-navigator navigator)
+        [else-params new-navigator] (when-let [p (:else-params params)]
+                                      (realize-parameter-list p navigator))
+        navigator (or new-navigator navigator)
+        min-remaining (or (first (:min-remaining else-params)) 0)
+        max-columns (or (first (:max-columns else-params))
+                        (get-max-column *out*))
+        clauses (:clauses params)
+        [strs navigator] (render-clauses clauses navigator (:base-args params))
+        slots (max 1
+                   (+ (dec (count strs)) (if (:colon params) 1 0) (if (:at params) 1 0)))
+        chars (reduce + (map count strs))
+        mincol (:mincol params)
+        minpad (:minpad params)
+        colinc (:colinc params)
+        minout (+ chars (* slots minpad))
+        result-columns (if (<= minout mincol)
+                         mincol
+                         (+ mincol (* colinc
+                                      (+ 1 (quot (- minout mincol 1) colinc)))))
+        total-pad (- result-columns chars)
+        pad (max minpad (quot total-pad slots))
+        extra-pad (- total-pad (* pad slots))
+        pad-str (apply str (repeat pad (:padchar params)))]
+    (if (and eol-str (> (+ (get-column (:base @@*out*)) min-remaining result-columns)
+                        max-columns))
+      (print eol-str))  ;;TODO print to *out*
+    (loop [slots slots
+           extra-pad extra-pad
+           strs strs
+           pad-only (or (:colon params)
+                        (and (= (count strs) 1) (not (:at params))))]
+      (if (seq strs)
+        (do
+          (print (str (if (not pad-only) (first strs))  ;;TODO print to *out*
+                      (if (or pad-only (next strs) (:at params)) pad-str)
+                      (if (pos? extra-pad) (:padchar params))))
+          (recur
+            (dec slots)
+            (dec extra-pad)
+            (if pad-only strs (next strs))
+            false))))
+    navigator))
+
 ;;======================================================================
 ;; dispatch.clj
 ;;======================================================================
