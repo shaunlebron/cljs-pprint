@@ -146,4 +146,8 @@
  "choice-conditional"     :same-name
  "boolean-conditional"    :same-name
  "check-arg-conditional"  :same-name
+ "iterate-sublist"        :same-name
+ "iterate-list-of-sublists" :same-name
+ "iterate-main-list"      :same-name
+ "iterate-main-sublists"  :same-name
  }

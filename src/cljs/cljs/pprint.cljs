@@ -1563,6 +1563,103 @@ http://www.lispworks.com/documentation/HyperSpec/Body/22_c.htm"
         arg-navigator)
       navigator)))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Support for the '~{...~}' iteration construct in its
+;; different flavors
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; ~{...~} without any modifiers uses the next argument as an argument list that
+;; is consumed by all the iterations
+(defn- iterate-sublist [params navigator offsets]
+  (let [max-count (:max-iterations params)
+        param-clause (first (:clauses params))
+        [clause navigator] (if (empty? param-clause)
+                             (get-format-arg navigator)
+                             [param-clause navigator])
+        [arg-list navigator] (next-arg navigator)
+        args (init-navigator arg-list)]
+    (loop [count 0
+           args args
+           last-pos (int -1)]
+      (if (and (not max-count) (= (:pos args) last-pos) (> count 1))
+        ;; TODO get the offset in here and call format exception
+        (throw (js/Error "%{ construct not consuming any arguments: Infinite loop!")))
+      (if (or (and (empty? (:rest args))
+                   (or (not (:colon (:right-params params))) (> count 0)))
+              (and max-count (>= count max-count)))
+        navigator
+        (let [iter-result (execute-sub-format clause args (:base-args params))]
+          (if (= :up-arrow (first iter-result))
+            navigator
+            (recur (inc count) iter-result (:pos args))))))))
+
+;; ~:{...~} with the colon treats the next argument as a list of sublists. Each of the
+;; sublists is used as the arglist for a single iteration.
+(defn- iterate-list-of-sublists [params navigator offsets]
+  (let [max-count (:max-iterations params)
+        param-clause (first (:clauses params))
+        [clause navigator] (if (empty? param-clause)
+                             (get-format-arg navigator)
+                             [param-clause navigator])
+        [arg-list navigator] (next-arg navigator)]
+    (loop [count 0
+           arg-list arg-list]
+      (if (or (and (empty? arg-list)
+                   (or (not (:colon (:right-params params))) (> count 0)))
+              (and max-count (>= count max-count)))
+        navigator
+        (let [iter-result (execute-sub-format
+                            clause
+                            (init-navigator (first arg-list))
+                            (init-navigator (next arg-list)))]
+          (if (= :colon-up-arrow (first iter-result))
+            navigator
+            (recur (inc count) (next arg-list))))))))
+
+;; ~@{...~} with the at sign uses the main argument list as the arguments to the iterations
+;; is consumed by all the iterations
+(defn- iterate-main-list [params navigator offsets]
+  (let [max-count (:max-iterations params)
+        param-clause (first (:clauses params))
+        [clause navigator] (if (empty? param-clause)
+                             (get-format-arg navigator)
+                             [param-clause navigator])]
+    (loop [count 0
+           navigator navigator
+           last-pos (int -1)]
+      (if (and (not max-count) (= (:pos navigator) last-pos) (> count 1))
+        ;; TODO get the offset in here and call format exception
+        (throw (js/Error "%@{ construct not consuming any arguments: Infinite loop!")))
+      (if (or (and (empty? (:rest navigator))
+                   (or (not (:colon (:right-params params))) (> count 0)))
+              (and max-count (>= count max-count)))
+        navigator
+        (let [iter-result (execute-sub-format clause navigator (:base-args params))]
+          (if (= :up-arrow (first iter-result))
+            (second iter-result)
+            (recur
+              (inc count) iter-result (:pos navigator))))))))
+
+;; ~@:{...~} with both colon and at sign uses the main argument list as a set of sublists, one
+;; of which is consumed with each iteration
+(defn- iterate-main-sublists [params navigator offsets]
+  (let [max-count (:max-iterations params)
+        param-clause (first (:clauses params))
+        [clause navigator] (if (empty? param-clause)
+                             (get-format-arg navigator)
+                             [param-clause navigator])]
+    (loop [count 0
+           navigator navigator]
+      (if (or (and (empty? (:rest navigator))
+                   (or (not (:colon (:right-params params))) (> count 0)))
+              (and max-count (>= count max-count)))
+        navigator
+        (let [[sublist navigator] (next-arg-or-nil navigator)
+              iter-result (execute-sub-format clause (init-navigator sublist) navigator)]
+          (if (= :colon-up-arrow (first iter-result))
+            navigator
+            (recur (inc count) navigator)))))))
+
 ;;======================================================================
 ;; dispatch.clj
 ;;======================================================================
