@@ -102,4 +102,11 @@
  "special-radix-markers"  :same-name
  "format-simple-number"   :same-name
  "format-ascii"           :same-name
+ "integral?"              :same-name
+ "remainders"             :same-name
+ "base-str"               :same-name
+ "java-base-formats"      "javascript-base-formats"
+ "opt-base-str"           :same-name
+ "group-by*"              :same-name
+ "format-integer"         :same-name
  }

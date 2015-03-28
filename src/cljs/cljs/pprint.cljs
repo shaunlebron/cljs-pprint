@@ -19,6 +19,18 @@
 (def ^:dynamic *out* nil)
 
 ;;======================================================================
+;; cljs specific utils
+;;======================================================================
+
+(defn ^boolean float?
+  "Returns true if n is an float."
+  [n]
+  (and (number? n)
+       (not ^boolean (js/isNaN n))
+       (not (identical? n js/Infinity))
+       (not (== (js/parseFloat n) (js/parseInt n 10)))))
+
+;;======================================================================
 ;; Utilities
 ;;======================================================================
 
@@ -887,6 +899,87 @@ http://www.lispworks.com/documentation/HyperSpec/Body/22_c.htm"
     (if (:at params)
       (print (str chars base-output))  ;;TODO need to print to *out*
       (print (str base-output chars))) ;;TODO need to print to *out*
+    arg-navigator))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Support for the integer directives ~D, ~X, ~O, ~B and some
+;; of ~R
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn- integral?
+  "returns true if a number is actually an integer (that is, has no fractional part)"
+  [x]
+  (cond
+    (integer? x) true
+    ;;(decimal? x) ;;no decimal support
+    (float? x) (= x (Math/floor x))
+    ;;(ratio? x) ;;no ratio support
+    :else false))
+
+(defn- remainders
+  "Return the list of remainders (essentially the 'digits') of val in the given base"
+  [base val]
+  (reverse
+    (first
+      (consume #(if (pos? %)
+                 [(rem % base) (quote %) base]
+                 [nil nil])
+               val))))
+
+;; TODO: xlated-val does not seem to be used here.
+;; NB
+(defn- base-str
+  "Return val as a string in the given base"
+  [base val]
+  (if (zero? val)
+    "0"
+    (let [xlated-val (cond
+                       ;(float? val) (bigdec val) ;;No bigdec
+                       ;(ratio? val) nil ;;No ratio
+                       :else val)]
+      (apply str
+             (map
+               #(if (< % 10) (char (+ (int \0) %)) (char (+ (int \a) (- % 10))))
+               (remainders base val))))))
+
+;;Not sure if this is accurate or necessary
+(def ^{:private true}
+  javascript-base-formats {8 "%o", 10 "%d", 16 "%x"})
+
+(defn- opt-base-str
+  "Return val as a string in the given base. No cljs format, so no improved performance."
+  [base val]
+  (base-str base val))
+
+(defn- group-by* [unit lis]
+  (reverse
+    (first
+      (consume (fn [x] [(seq (reverse (take unit x))) (seq (drop unit x))]) (reverse lis)))))
+
+(defn- format-integer [base params arg-navigator offsets]
+  (let [[arg arg-navigator] (next-arg arg-navigator)]
+    (if (integral? arg)
+      (let [neg (neg? arg)
+            pos-arg (if neg (- arg) arg)
+            raw-str (opt-base-str base pos-arg)
+            group-str (if (:colon params)
+                        (let [groups (map #(apply str %) (group-by* (:commainterval params) raw-str))
+                              commas (repeat (count groups) (:commachar params))]
+                          (apply str (next (interleave commas groups))))
+                        raw-str)
+            signed-str (cond
+                         neg (str "-" group-str)
+                         (:at params) (str "+" group-str)
+                         true group-str)
+            padded-str (if (< (.-length signed-str) (:mincol params))
+                         (str (apply str (repeat (- (:mincol params) (.-length signed-str))
+                                                 (:padchar params)))
+                              signed-str)
+                         signed-str)]
+        (print padded-str))  ;;TODO need to print to *out*
+      (format-ascii print-str {:mincol (:mincol params) :colinc 1 :minpad 0
+                               :padchar (:padchar params) :at true}
+                    (init-navigator [arg]) nil))
     arg-navigator))
 
 ;;======================================================================
