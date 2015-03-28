@@ -167,4 +167,6 @@
  "format-logical-block"   :same-name
  "set-indent"             :same-name
  "conditional-newline"    :same-name
+ "process-directive-table-element" :same-name
+ "defdirectives"          :same-name
  }

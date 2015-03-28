@@ -10,7 +10,8 @@
   (:refer-clojure :exclude [deftype])
   (:require-macros
     [cljs.pprint :as m :refer [with-pretty-writer getf setf deftype
-                               pprint-logical-block print-length-loop]])
+                               pprint-logical-block print-length-loop
+                               defdirectives]])
   (:require
     [cljs.core :refer [IWriter IDeref]]
     [clojure.string :as string])
@@ -2023,6 +2024,288 @@ not a pretty writer (which keeps track of columns), this function always outputs
                (if (:at params) :miser :linear))]
     (pprint-newline kind)
     navigator))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; The table of directives we support, each with its params,
+;;; properties, and the compilation function
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defdirectives
+  (\A
+    [:mincol [0 js/Number] :colinc [1 js/Number] :minpad [0 js/Number] :padchar [\space js/String]]
+    #{:at :colon :both} {}
+    #(format-ascii print-str %1 %2 %3))
+
+  (\S
+    [:mincol [0 js/Number] :colinc [1 js/Number] :minpad [0 js/Number] :padchar [\space js/String]]
+    #{:at :colon :both} {}
+    #(format-ascii pr-str %1 %2 %3))
+
+  (\D
+    [:mincol [0 js/Number] :padchar [\space js/String] :commachar [\, js/String]
+     :commainterval [3 js/Number]]
+    #{:at :colon :both} {}
+    #(format-integer 10 %1 %2 %3))
+
+  (\B
+    [:mincol [0 js/Number] :padchar [\space js/String] :commachar [\, js/String]
+     :commainterval [3 js/Number]]
+    #{:at :colon :both} {}
+    #(format-integer 2 %1 %2 %3))
+
+  (\O
+    [:mincol [0 js/Number] :padchar [\space js/String] :commachar [\, js/String]
+     :commainterval [3 js/Number]]
+    #{:at :colon :both} {}
+    #(format-integer 8 %1 %2 %3))
+
+  (\X
+    [:mincol [0 js/Number] :padchar [\space js/String] :commachar [\, js/String]
+     :commainterval [3 js/Number]]
+    #{:at :colon :both} {}
+    #(format-integer 16 %1 %2 %3))
+
+  (\R
+    [:base [nil js/Number] :mincol [0 js/Number] :padchar [\space js/String] :commachar [\, js/String]
+     :commainterval [3 js/Number]]
+    #{:at :colon :both} {}
+    (do
+      (cond                          ; ~R is overloaded with bizareness
+        (first (:base params))     #(format-integer (:base %1) %1 %2 %3)
+        (and (:at params) (:colon params))   #(format-old-roman %1 %2 %3)
+        (:at params)               #(format-new-roman %1 %2 %3)
+        (:colon params)            #(format-ordinal-english %1 %2 %3)
+        true                       #(format-cardinal-english %1 %2 %3))))
+
+  (\P
+    []
+    #{:at :colon :both} {}
+    (fn [params navigator offsets]
+      (let [navigator (if (:colon params) (relative-reposition navigator -1) navigator)
+            strs (if (:at params) ["y" "ies"] ["" "s"])
+            [arg navigator] (next-arg navigator)]
+        (print (if (= arg 1) (first strs) (second strs)))
+        navigator)))
+
+  (\C
+    [:char-format [nil js/String]]
+    #{:at :colon :both} {}
+    (cond
+      (:colon params) pretty-character
+      (:at params) readable-character
+      :else plain-character))
+
+  (\F
+    [:w [nil js/Number] :d [nil js/Number] :k [0 js/Number] :overflowchar [nil js/String]
+     :padchar [\space js/String]]
+    #{:at} {}
+    fixed-float)
+
+  (\E
+    [:w [nil js/Number] :d [nil js/Number] :e [nil js/Number] :k [1 js/Number]
+     :overflowchar [nil js/String] :padchar [\space js/String]
+     :exponentchar [nil js/String]]
+    #{:at} {}
+    exponential-float)
+
+  (\G
+    [:w [nil js/Number] :d [nil js/Number] :e [nil js/Number] :k [1 js/Number]
+     :overflowchar [nil js/String] :padchar [\space js/String]
+     :exponentchar [nil js/String]]
+    #{:at} {}
+    general-float)
+
+  (\$
+    [:d [2 js/Number] :n [1 js/Number] :w [0 js/Number] :padchar [\space js/String]]
+    #{:at :colon :both} {}
+    dollar-float)
+
+  (\%
+    [:count [1 js/Number]]
+    #{} {}
+    (fn [params arg-navigator offsets]
+      (dotimes [i (:count params)]
+        (prn))   ;; TODO print to *out*
+      arg-navigator))
+
+  (\&
+    [:count [1 js/Number]]
+    #{:pretty} {}
+    (fn [params arg-navigator offsets]
+      (let [cnt (:count params)]
+        (if (pos? cnt) (fresh-line))
+        (dotimes [i (dec cnt)]
+          (prn)))   ;; TODO print to *out*
+      arg-navigator))
+
+  (\|
+    [:count [1 js/Number]]
+    #{} {}
+    (fn [params arg-navigator offsets]
+      (dotimes [i (:count params)]
+        (print \formfeed))   ;; TODO print to *out*
+      arg-navigator))
+
+  (\~
+    [:n [1 js/Number]]
+    #{} {}
+    (fn [params arg-navigator offsets]
+      (let [n (:n params)]
+        (print (apply str (repeat n \~)))   ;; TODO print to *out*
+        arg-navigator)))
+
+  (\newline ;; Whitespace supression is handled in the compilation loop
+    []
+    #{:colon :at} {}
+    (fn [params arg-navigator offsets]
+      (if (:at params)
+        (prn))   ;; TODO print to *out*
+      arg-navigator))
+
+  (\T
+    [:colnum [1 js/Number] :colinc [1 js/Number]]
+    #{:at :pretty} {}
+    (if (:at params)
+      #(relative-tabulation %1 %2 %3)
+      #(absolute-tabulation %1 %2 %3)))
+
+  (\*
+    [:n [1 js/Number]]
+    #{:colon :at} {}
+    (fn [params navigator offsets]
+      (let [n (:n params)]
+        (if (:at params)
+          (absolute-reposition navigator n)
+          (relative-reposition navigator (if (:colon params) (- n) n))))))
+
+  (\?
+    []
+    #{:at} {}
+    (if (:at params)
+      (fn [params navigator offsets]     ; args from main arg list
+        (let [[subformat navigator] (get-format-arg navigator)]
+          (execute-sub-format subformat navigator (:base-args params))))
+      (fn [params navigator offsets]     ; args from sub-list
+        (let [[subformat navigator] (get-format-arg navigator)
+              [subargs navigator] (next-arg navigator)
+              sub-navigator (init-navigator subargs)]
+          (execute-sub-format subformat sub-navigator (:base-args params))
+          navigator))))
+
+  (\(
+    []
+    #{:colon :at :both} {:right \), :allows-separator nil, :else nil}
+    (let [mod-case-writer (cond
+                            (and (:at params) (:colon params))
+                            upcase-writer
+
+                            (:colon params)
+                            capitalize-word-writer
+
+                            (:at params)
+                            init-cap-writer
+
+                            :else
+                            downcase-writer)]
+      #(modify-case mod-case-writer %1 %2 %3)))
+
+  (\) [] #{} {} nil)
+
+  (\[
+    [:selector [nil js/Number]]
+    #{:colon :at} {:right \], :allows-separator true, :else :last}
+    (cond
+      (:colon params)
+      boolean-conditional
+
+      (:at params)
+      check-arg-conditional
+
+      true
+      choice-conditional))
+
+  (\; [:min-remaining [nil js/Number] :max-columns [nil js/Number]]
+    #{:colon} {:separator true} nil)
+
+  (\] [] #{} {} nil)
+
+  (\{
+    [:max-iterations [nil js/Number]]
+    #{:colon :at :both} {:right \}, :allows-separator false}
+    (cond
+      (and (:at params) (:colon params))
+      iterate-main-sublists
+
+      (:colon params)
+      iterate-list-of-sublists
+
+      (:at params)
+      iterate-main-list
+
+      true
+      iterate-sublist))
+
+  (\} [] #{:colon} {} nil)
+
+  (\<
+    [:mincol [0 js/Number] :colinc [1 js/Number] :minpad [0 js/Number] :padchar [\space js/String]]
+    #{:colon :at :both :pretty} {:right \>, :allows-separator true, :else :first}
+    logical-block-or-justify)
+
+  (\> [] #{:colon} {} nil)
+
+  ;; TODO: detect errors in cases where colon not allowed
+  (\^ [:arg1 [nil js/Number] :arg2 [nil js/Number] :arg3 [nil js/Number]]
+    #{:colon} {}
+    (fn [params navigator offsets]
+      (let [arg1 (:arg1 params)
+            arg2 (:arg2 params)
+            arg3 (:arg3 params)
+            exit (if (:colon params) :colon-up-arrow :up-arrow)]
+        (cond
+          (and arg1 arg2 arg3)
+          (if (<= arg1 arg2 arg3) [exit navigator] navigator)
+
+          (and arg1 arg2)
+          (if (= arg1 arg2) [exit navigator] navigator)
+
+          arg1
+          (if (= arg1 0) [exit navigator] navigator)
+
+          true     ; TODO: handle looking up the arglist stack for info
+          (if (if (:colon params)
+                (empty? (:rest (:base-args params)))
+                (empty? (:rest navigator)))
+            [exit navigator] navigator)))))
+
+  (\W
+    []
+    #{:at :colon :both :pretty} {}
+    (if (or (:at params) (:colon params))
+      (let [bindings (concat
+                       (if (:at params) [:level nil :length nil] [])
+                       (if (:colon params) [:pretty true] []))]
+        (fn [params navigator offsets]
+          (let [[arg navigator] (next-arg navigator)]
+            (if (apply write arg bindings)
+              [:up-arrow navigator]
+              navigator))))
+      (fn [params navigator offsets]
+        (let [[arg navigator] (next-arg navigator)]
+          (if (write-out arg)
+            [:up-arrow navigator]
+            navigator)))))
+
+  (\_
+    []
+    #{:at :colon :both} {}
+    conditional-newline)
+
+  (\I
+    [:n [0 js/Number]]
+    #{:colon} {}
+    set-indent)
+  )
 
 ;;======================================================================
 ;; dispatch.clj

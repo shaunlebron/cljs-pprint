@@ -92,3 +92,16 @@
          (do ~@mod-body)
          (~'-write cljs.pprint/*out* "...")))))
 
+(defn- process-directive-table-element [[char params flags bracket-info & generator-fn]]
+  [char,
+   {:directive char,
+    :params `(array-map ~@params),
+    :flags flags,
+    :bracket-info bracket-info,
+    :generator-fn (concat '(fn [params offset]) generator-fn)}])
+
+(defmacro ^{:private true}
+  defdirectives
+  [& directives]
+  `(def ^{:private true}
+        ~'directive-table (hash-map ~@(mapcat process-directive-table-element directives))))
