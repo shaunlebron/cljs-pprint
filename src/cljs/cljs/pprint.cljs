@@ -766,6 +766,43 @@ http://www.lispworks.com/documentation/HyperSpec/Body/22_c.htm"
                           (apply str (repeat offset \space)) "^" \newline)]
     (throw (js/Error full-message))))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Argument navigators manage the argument list
+;; as the format statement moves through the list
+;; (possibly going forwards and backwards as it does so)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defrecord ^{:private true}
+  arg-navigator [seq rest pos])
+
+(defn- init-navigator
+  "Create a new arg-navigator from the sequence with the position set to 0"
+  {:skip-wiki true}
+  [s]
+  (let [s (seq s)]
+    (arg-navigator. s s 0)))
+
+;; TODO call format-error with offset
+(defn- next-arg [navigator]
+  (let [rst (:rest navigator)]
+    (if rst
+      [(first rst) (arg-navigator. (:seq navigator) (next rst) (inc (:pos navigator)))]
+      (throw (js/Error "Not enough arguments for format definition")))))
+
+(defn- next-arg-or-nil [navigator]
+  (let [rst (:rest navigator)]
+    (if rst
+      [(first rst) (arg-navigator. (:seq navigator) (next rst) (inc (:pos navigator)))]
+      [nil navigator])))
+
+;; Get an argument off the arg list and compile it if it's not already compiled
+(defn- get-format-arg [navigator]
+  (let [[raw-format navigator] (next-arg navigator)
+        compiled-format (if (string? raw-format)
+                          (compile-format raw-format)
+                          raw-format)]
+    [compiled-format navigator]))
+
 ;;======================================================================
 ;; dispatch.clj
 ;;======================================================================

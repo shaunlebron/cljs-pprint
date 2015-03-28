@@ -86,4 +86,12 @@
  "pprint-logical-block"   :same-name
  "pll-mod-body"           :same-name
  "print-length-loop"      :same-name
+ "cl-format"              :same-name
+ "*format-str*"           :same-name
+ "format-error"           :same-name
+ "arg-navigator"          :same-name
+ "init-navigator"         :same-name
+ "next-arg"               :same-name
+ "next-arg-or-nil"        :same-name
+ "get-format-arg"         :same-name
  }
