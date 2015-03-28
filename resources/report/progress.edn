@@ -160,4 +160,7 @@
  "init-cap-writer"        :same-name
  "modify-case"            :same-name
  "get-pretty-writer"      :same-name
+ "fresh-line"             :same-name
+ "absolute-tabulation"    :same-name
+ "relative-tabulation"    :same-name
  }

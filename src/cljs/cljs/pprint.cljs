@@ -1941,6 +1941,39 @@ It prints a table of squares and cubes for the numbers from 1 to 10:
     writer
     (pretty-writer writer *print-right-margin* *print-miser-width*)))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Support for column-aware operations ~&, ~T
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn fresh-line
+  "Make a newline if *out* is not already at the beginning of the line. If *out* is
+not a pretty writer (which keeps track of columns), this function always outputs a newline."
+  []
+  (if (satisfies? IDeref *out*)
+    (if (not (= 0 (get-column (:base @@*out*))))
+      (prn))  ;; TODO print to *out*
+    (prn)))   ;; TODO print to *out*
+
+(defn- absolute-tabulation [params navigator offsets]
+  (let [colnum (:colnum params)
+        colinc (:colinc params)
+        current (get-column (:base @@*out*))
+        space-count (cond
+                      (< current colnum) (- colnum current)
+                      (= colinc 0) 0
+                      :else (- colinc (rem (- current colnum) colinc)))]
+    (print (apply str (repeat space-count \space))))   ;; TODO print to *out*
+  navigator)
+
+(defn- relative-tabulation [params navigator offsets]
+  (let [colrel (:colnum params)
+        colinc (:colinc params)
+        start-col (+ colrel (get-column (:base @@*out*)))
+        offset (if (pos? colinc) (rem start-col colinc) 0)
+        space-count (+ colrel (if (= 0 offset) 0 (- colinc offset)))]
+    (print (apply str (repeat space-count \space))))  ;; TODO print to *out*
+  navigator)
+
 ;;======================================================================
 ;; dispatch.clj
 ;;======================================================================
