@@ -86,4 +86,8 @@
  "pprint-logical-block"   :same-name
  "pll-mod-body"           :same-name
  "print-length-loop"      :same-name
+ "use-method"             :same-name
+ "pprint-vector"          :same-name
+ "pprint-map"             :same-name
+ "simple-dispatch"        :same-name
  }
