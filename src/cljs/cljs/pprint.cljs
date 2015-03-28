@@ -91,108 +91,12 @@ beginning of aseq"
         pos
         (recur (inc pos))))))
 
-;;======================================================================
-;; Vars
-;;======================================================================
-
-;; referenced cljs.core vars:
-;;   *print-length*
-;;   *print-level*
-
-;; referenced vars not found in cljs:
-;;   *out*
-;;   *print-base*
-;;   *print-radix*
-
-;; pprint vars:
-;;   *print-pretty* true
-;;   *print-pprint-dispatch* nil
-;;   *print-right-margin* 72
-;;   *print-miser-width* 40
-
-(def ^:dynamic
- ^{:doc "Pretty printing will try to avoid anything going beyond this column.
-Set it to nil to have pprint let the line be arbitrarily long. This will ignore all
-non-mandatory newlines.",
-   :added "1.2"}
- *print-right-margin* 72)
-
-(def ^:dynamic
- ^{:doc "The column at which to enter miser style. Depending on the dispatch table,
-miser style add newlines in more places to try to keep lines short allowing for further
-levels of nesting.",
-   :added "1.2"}
- *print-miser-width* 40)
-
-(def ^:dynamic
- ^{:doc "Bind to true if you want write to use pretty printing"}
- *print-pretty* true)
-
-(defonce ^:dynamic
-^{:doc "The pretty print dispatch function. Use with-pprint-dispatch or
-set-pprint-dispatch to modify."
-  :added "1.2"}
-*print-pprint-dispatch* nil)
-
-;;; TODO implement output limiting
-(def ^:dynamic
-^{:private true,
-  :doc "Maximum number of lines to print in a pretty print instance (N.B. This is not yet used)"}
-*print-lines* nil)
-
-;;; TODO: implement circle and shared
-(def ^:dynamic
-^{:private true,
-  :doc "Mark circular structures (N.B. This is not yet used)"}
-*print-circle* nil)
-
-;;; TODO: should we just use *print-dup* here?
-(def ^:dynamic
-^{:private true,
-  :doc "Mark repeated structures rather than repeat them (N.B. This is not yet used)"}
-*print-shared* nil)
-
-(def ^:dynamic
-^{:doc "Don't print namespaces with symbols. This is particularly useful when
-pretty printing the results of macro expansions"
-  :added "1.2"}
-*print-suppress-namespaces* nil)
-
-;;; TODO: support print-base and print-radix in cl-format
-;;; TODO: support print-base and print-radix in rationals
-(def ^:dynamic
-^{:doc "Print a radix specifier in front of integers and rationals. If *print-base* is 2, 8,
-or 16, then the radix specifier used is #b, #o, or #x, respectively. Otherwise the
-radix specifier is in the form #XXr where XX is the decimal value of *print-base* "
-  :added "1.2"}
-*print-radix* nil)
-
-(def ^:dynamic
-^{:doc "The base to use for printing integers and rationals."
-  :added "1.2"}
-*print-base* 10)
-
-;;======================================================================
-;; Internal variables that keep track of where we are in the
-;; structure
-;;======================================================================
-
-(def ^:dynamic ^{:private true} *current-level* 0)
-
-(def ^:dynamic ^{:private true} *current-length* nil)
-
-;;======================================================================
-;; Protocols
-;;======================================================================
-
-;; referenced Interfaces:
-;;  definterface PrettyFlush
-
+;; Flush the pretty-print buffer without flushing the underlying stream
 (defprotocol IPrettyFlush
   (-ppflush [pp]))
 
 ;;======================================================================
-;; Column Writer
+;; column_writer.clj
 ;;======================================================================
 
 (def ^:dynamic ^{:private true} *default-page-width* 72)
@@ -231,63 +135,48 @@ radix specifier is in the form #XXr where XX is the decimal value of *print-base
 (defn- column-writer
   ([writer] (column-writer writer *default-page-width*))
   ([writer max-columns]
-     (let [fields (atom {:max max-columns, :cur 0, :line 0 :base writer})]
-       (reify
+   (let [fields (atom {:max max-columns, :cur 0, :line 0 :base writer})]
+     (reify
 
-         IDeref
-         (-deref [_] fields)
+       IDeref
+       (-deref [_] fields)
 
-         IWriter
-         (-flush [_]
-           (-flush writer))
-         (-write
-           ;;-write isn't multi-arity, so need different way to do this
-           #_([this ^chars cbuf ^Number off ^Number len]
-            (let [writer (get-field this :base)]
-              (-write writer cbuf off len)))
-           [this x]
-           (condp = (type x)
-             js/String
-             (let [s x
-                   nl (.lastIndexOf s \newline)]
-               (if (neg? nl)
-                 (set-field this :cur (+ (get-field this :cur) (count s)))
-                 (do
-                   (set-field this :cur (- (count s) nl 1))
-                   (set-field this :line (+ (get-field this :line)
-                                            (count (filter #(= % \newline) s))))))
-               (-write ^Writer (get-field this :base) s))
-             js/Number
-             (c-write-char this x)))))))
+       IWriter
+       (-flush [_]
+         (-flush writer))
+       (-write
+         ;;-write isn't multi-arity, so need different way to do this
+         #_([this ^chars cbuf ^Number off ^Number len]
+          (let [writer (get-field this :base)]
+            (-write writer cbuf off len)))
+         [this x]
+         (condp = (type x)
+           js/String
+           (let [s x
+                 nl (.lastIndexOf s \newline)]
+             (if (neg? nl)
+               (set-field this :cur (+ (get-field this :cur) (count s)))
+               (do
+                 (set-field this :cur (- (count s) nl 1))
+                 (set-field this :line (+ (get-field this :line)
+                                          (count (filter #(= % \newline) s))))))
+             (-write (get-field this :base) s))
+           js/Number
+           (c-write-char this x)))))))
 
 ;;======================================================================
-;; Main Writer
+;; pretty_writer.clj
 ;;======================================================================
 
-;;----------------------------------------------------------------------
+;;======================================================================
 ;; Forward declarations
-;;----------------------------------------------------------------------
+;;======================================================================
 
 (declare get-miser-width)
 
-;;----------------------------------------------------------------------
-;; DATA STRUCTURES
-;;
-;X  defstruct logical-block :parent :section :start-col :indent
-;;                          :done-nl :intra-block-nl
-;;                          :prefix :per-line-prefix :suffix
-;;                          :logical-block-callback
-;;
-;;  defn- ancestor?
-;;  defn- buffer-length
-;;
-;;  defstruct section       :parent
-;;  deftype buffer-blob     :data :trailing-white-space :start-pos :end-pos
-;;  deftype nl-t            :type :logical-block :start-pos :end-pos
-;;  deftype start-block-t   :logical-block :start-pos :end-pos
-;;  deftype end-block-t     :logical-block :start-pos :end-pos
-;;  deftype indent-t        :logical-block :relative-to :offset :start-pos :end-pos
-
+;;======================================================================
+;; The data structures used by pretty-writer
+;;======================================================================
 
 (defrecord ^{:private true} logical-block
   [parent section start-col indent
@@ -319,17 +208,6 @@ radix specifier is in the form #XXr where XX is the decimal value of *print-base
 (deftype end-block-t :logical-block :start-pos :end-pos)
 
 (deftype indent-t :logical-block :relative-to :offset :start-pos :end-pos)
-
-;;----------------------------------------------------------------------
-;; TOKEN WRITERS
-;;
-;; defmulti write-token
-;;    :start-block-t
-;;    :end-block-t
-;;    :indent-t
-;;    :buffer-blob
-;;    :nl-t
-;; defn- write-tokens
 
 (def ^:private pp-newline (fn [] "\n"))
 
@@ -383,23 +261,10 @@ radix specifier is in the form #XXr where XX is the decimal value of *print-base
         (-write (getf :base) tws)
         (setf :trailing-white-space nil)))))
 
-;;----------------------------------------------------------------------
-;; EMIT NEWLINE? FUNCTIONS
-;;
-;; defn- tokens-fit?
-;; defn- linear-nl?
-;; defn- miser-nl?
-;;
-;; defmulti emit-nl?
-;;    :linear
-;;    :miser
-;;    :fill
-;;    :mandatory
-
-;;----------------------------------------------------------------------
+;;======================================================================
 ;; emit-nl? method defs for each type of new line. This makes
 ;; the decision about whether to print this type of new line.
-;;----------------------------------------------------------------------
+;;======================================================================
 
 (defn- tokens-fit? [this tokens]
   (let [maxcol (get-max-column (getf :base))]
@@ -437,30 +302,9 @@ radix specifier is in the form #XXr where XX is the decimal value of *print-base
 (defmethod emit-nl? :mandatory [_ _ _ _]
   true)
 
-;;----------------------------------------------------------------------
-;; VARIOUS SUPPORT FUNCTIONS
-;;
-;; defn- get-section
-;; defn- get-sub-section
-;;
-;; defn- update-nl-state
-;; defn- emit-nl
-;; defn- split-at-newline
-;;
-;; defmulti tok
-;;    :nl-t
-;;    :buffer-blob
-;;    :default
-;; defn- toks
-;;
-;; defn- write-token-string
-;; defn- write-line
-;;
-;; defn- add-to-buffer
-;; defn- write-buffered-output
-;; defn- write-white-space
-;; defn- write-initial-lines
-;; defn- p-write-char
+;;======================================================================
+;; Various support functions
+;;======================================================================
 
 (defn- get-section [buffer]
   (let [nl (first buffer)
@@ -594,10 +438,9 @@ radix specifier is in the form #XXr where XX is the decimal value of *print-base
         (setf :pos newpos)
         (add-to-buffer this (make-buffer-blob (str (char c)) nil oldpos newpos))))))
 
-;;----------------------------------------------------------------------
-;; CONSTRUCTOR
-;;
-;X defn- pretty-writer
+;;======================================================================
+;; Initialize the pretty-writer instance
+;;======================================================================
 
 (defn- pretty-writer [writer max-columns miser-width]
   (let [lb (logical-block. nil nil (atom 0) (atom 0) (atom false) (atom false)
@@ -652,17 +495,9 @@ radix specifier is in the form #XXr where XX is the decimal value of *print-base
 
       )))
 
-
-;;----------------------------------------------------------------------
-;; METHODS
-;;
-;; defn start-block
-;; defn end-block
-;; defn- nl
-;; defn- indent
-;; defn- get-miser-width
-;; defn- set-miser-width
-;; defn- set-logical-block-callback
+;;======================================================================
+;; Methods for pretty-writer
+;;======================================================================
 
 (defn- start-block
   [this prefix per-line-prefix suffix]
@@ -720,47 +555,88 @@ radix specifier is in the form #XXr where XX is the decimal value of *print-base
   (getf :miser-width))
 
 ;;======================================================================
-;; Helpers
+;; pprint_base.clj
 ;;======================================================================
 
-;; pprint-logical-block
-;; pprint-newline
-;; pprint-length-loop
-
-(defn- check-enumerated-arg [arg choices]
-  (if-not (choices arg)
-    ;; TODO clean up choices string
-    (throw (js/Error. (str "Bad argument: " arg ". It must be one of " choices)))))
-
-(defn- level-exceeded []
-  (and *print-level* (>= *current-level* *print-level*)))
-
-(defn pprint-newline
-  "Print a conditional newline to a pretty printing stream. kind specifies if the
-  newline is :linear, :miser, :fill, or :mandatory.
-
-  This function is intended for use when writing custom dispatch functions.
-
-  Output is sent to *out* which must be a pretty printing writer."
-  [kind]
-  (check-enumerated-arg kind #{:linear :miser :fill :mandatory})
-  (nl *out* kind))
-
 ;;======================================================================
-;; Helpers
+;; Variables that control the pretty printer
 ;;======================================================================
 
-;; pprint-logical-block
-;; pprint-newline
-;; pprint-length-loop
+;; *print-length*, *print-level* and *print-dup* are defined in cljs.core
+(def ^:dynamic
+ ^{:doc "Bind to true if you want write to use pretty printing"}
+ *print-pretty* true)
+
+(defonce ^:dynamic
+ ^{:doc "The pretty print dispatch function. Use with-pprint-dispatch or
+set-pprint-dispatch to modify."
+   :added "1.2"}
+ *print-pprint-dispatch* nil)
+
+(def ^:dynamic
+ ^{:doc "Pretty printing will try to avoid anything going beyond this column.
+Set it to nil to have pprint let the line be arbitrarily long. This will ignore all
+non-mandatory newlines.",
+   :added "1.2"}
+ *print-right-margin* 72)
+
+(def ^:dynamic
+ ^{:doc "The column at which to enter miser style. Depending on the dispatch table,
+miser style add newlines in more places to try to keep lines short allowing for further
+levels of nesting.",
+   :added "1.2"}
+ *print-miser-width* 40)
+
+;;; TODO implement output limiting
+(def ^:dynamic
+^{:private true,
+  :doc "Maximum number of lines to print in a pretty print instance (N.B. This is not yet used)"}
+*print-lines* nil)
+
+;;; TODO: implement circle and shared
+(def ^:dynamic
+^{:private true,
+  :doc "Mark circular structures (N.B. This is not yet used)"}
+*print-circle* nil)
+
+;;; TODO: should we just use *print-dup* here?
+(def ^:dynamic
+^{:private true,
+  :doc "Mark repeated structures rather than repeat them (N.B. This is not yet used)"}
+*print-shared* nil)
+
+(def ^:dynamic
+^{:doc "Don't print namespaces with symbols. This is particularly useful when
+pretty printing the results of macro expansions"
+  :added "1.2"}
+*print-suppress-namespaces* nil)
+
+;;; TODO: support print-base and print-radix in cl-format
+;;; TODO: support print-base and print-radix in rationals
+(def ^:dynamic
+^{:doc "Print a radix specifier in front of integers and rationals. If *print-base* is 2, 8,
+or 16, then the radix specifier used is #b, #o, or #x, respectively. Otherwise the
+radix specifier is in the form #XXr where XX is the decimal value of *print-base* "
+  :added "1.2"}
+*print-radix* nil)
+
+(def ^:dynamic
+^{:doc "The base to use for printing integers and rationals."
+  :added "1.2"}
+*print-base* 10)
 
 ;;======================================================================
-;; Main Interface
+;; Internal variables that keep track of where we are in the
+;; structure
 ;;======================================================================
 
-;; defn write-out
-;X defn pprint
-;; defn pp
+(def ^:dynamic ^{:private true} *current-level* 0)
+
+(def ^:dynamic ^{:private true} *current-length* nil)
+
+;;======================================================================
+;; Support for the write function
+;;======================================================================
 
 (defn- pretty-writer?
   "Return true iff x is a PrettyWriter"
@@ -814,35 +690,49 @@ Normal library clients should use the standard \"write\" interface. "
   nil)
 
 ;;======================================================================
-;; Simple Dispatch
+;; Support for the functional interface to the pretty printer
 ;;======================================================================
 
-;; defn- pprint-simple-list
-;; defn- pprint-list
-;; defn- pprint-vector
-;; defn- pprint-array
-;; defn- pprint-map
-;; defn- pprint-set
-;; defn- pprint-pqueue
-;; defn- pprint-ideref
-;; defn- pprint-simple-default
-;;
-;; defmulti simple-dispatch
+(defn- check-enumerated-arg [arg choices]
+  (if-not (choices arg)
+    ;; TODO clean up choices string
+    (throw (js/Error. (str "Bad argument: " arg ". It must be one of " choices)))))
+
+(defn- level-exceeded []
+  (and *print-level* (>= *current-level* *print-level*)))
+
+(defn pprint-newline
+  "Print a conditional newline to a pretty printing stream. kind specifies if the
+  newline is :linear, :miser, :fill, or :mandatory.
+
+  This function is intended for use when writing custom dispatch functions.
+
+  Output is sent to *out* which must be a pretty printing writer."
+  [kind]
+  (check-enumerated-arg kind #{:linear :miser :fill :mandatory})
+  (nl *out* kind))
+
+;;======================================================================
+;; cl_format.clj
+;;======================================================================
+
+;;======================================================================
+;; dispatch.clj
+;;======================================================================
 
 (defn- use-method
   "Installs a function as a new method of multimethod associated with dispatch-value. "
   [multifn dispatch-val func]
   (-add-method multifn dispatch-val func))
 
-(defmulti simple-dispatch
-  "The pretty print dispatch function for simple data structure format."
-  (fn [obj]
-    (cond
-      (list? obj) :list
-      (map? obj) :map
-      (vector? obj) :vector
-      (nil? obj) nil
-      :default :default)))
+;;======================================================================
+;; Dispatch for the basic data types when interpreted
+;; as data (as opposed to code).
+;;======================================================================
+
+;;; TODO: inline these formatter statements into funcs so that we
+;;; are a little easier on the stack. (Or, do "real" compilation, a
+;;; la Common Lisp)
 
 (defn- pprint-list [alis]
   (pprint-logical-block :prefix "(" :suffix ")"
@@ -854,6 +744,7 @@ Normal library clients should use the standard \"write\" interface. "
           (pprint-newline :linear)
           (recur (next alis)))))))
 
+;;; (def pprint-vector (formatter-out "~<[~;~@{~w~^ ~_~}~;]~:>"))
 (defn- pprint-vector [avec]
   (pprint-logical-block :prefix "[" :suffix "]"
     (print-length-loop [aseq (seq avec)]
@@ -864,6 +755,7 @@ Normal library clients should use the standard \"write\" interface. "
           (pprint-newline :linear)
           (recur (next aseq)))))))
 
+;;; (def pprint-map (formatter-out "~<{~;~@{~<~w~^ ~_~w~:>~^, ~_~}~;}~:>"))
 (defn- pprint-map [amap]
   (pprint-logical-block :prefix "{" :suffix "}"
     (print-length-loop [aseq (seq amap)]
@@ -885,6 +777,16 @@ Normal library clients should use the standard \"write\" interface. "
   ;;TODO: Update to handle arrays (?) and suppressing namespaces
   (-write *out* (pr-str obj)))
 
+(defmulti simple-dispatch
+          "The pretty print dispatch function for simple data structure format."
+          (fn [obj]
+            (cond
+              (list? obj) :list
+              (map? obj) :map
+              (vector? obj) :vector
+              (nil? obj) nil
+              :default :default)))
+
 (use-method simple-dispatch :list pprint-list)
 (use-method simple-dispatch :vector pprint-vector)
 (use-method simple-dispatch :map pprint-map)
@@ -892,3 +794,8 @@ Normal library clients should use the standard \"write\" interface. "
 (use-method simple-dispatch :default pprint-simple-default)
 
 (set-pprint-dispatch simple-dispatch)
+
+;;======================================================================
+;; print_table.clj
+;;======================================================================
+
