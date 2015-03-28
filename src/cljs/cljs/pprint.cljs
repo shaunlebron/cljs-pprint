@@ -1019,6 +1019,118 @@ http://www.lispworks.com/documentation/HyperSpec/Body/22_c.htm"
       "quindecillion" "sexdecillion" "septendecillion"
       "octodecillion" "novemdecillion" "vigintillion"])
 
+(defn- format-simple-cardinal
+  "Convert a number less than 1000 to a cardinal english string"
+  [num]
+  (let [hundreds (quot num 100)
+        tens (rem num 100)]
+    (str
+      (if (pos? hundreds) (str (nth english-cardinal-units hundreds) " hundred"))
+      (if (and (pos? hundreds) (pos? tens)) " ")
+      (if (pos? tens)
+        (if (< tens 20)
+          (nth english-cardinal-units tens)
+          (let [ten-digit (quot tens 10)
+                unit-digit (rem tens 10)]
+            (str
+              (if (pos? ten-digit) (nth english-cardinal-tens ten-digit))
+              (if (and (pos? ten-digit) (pos? unit-digit)) "-")
+              (if (pos? unit-digit) (nth english-cardinal-units unit-digit)))))))))
+
+(defn- add-english-scales
+  "Take a sequence of parts, add scale numbers (e.g., million) and combine into a string
+  offset is a factor of 10^3 to multiply by"
+  [parts offset]
+  (let [cnt (count parts)]
+    (loop [acc []
+           pos (dec cnt)
+           this (first parts)
+           remainder (next parts)]
+      (if (nil? remainder)
+        (str (apply str (interpose ", " acc))
+             (if (and (not (empty? this)) (not (empty? acc))) ", ")
+             this
+             (if (and (not (empty? this)) (pos? (+ pos offset)))
+               (str " " (nth english-scale-numbers (+ pos offset)))))
+        (recur
+          (if (empty? this)
+            acc
+            (conj acc (str this " " (nth english-scale-numbers (+ pos offset)))))
+          (dec pos)
+          (first remainder)
+          (next remainder))))))
+
+(defn- format-cardinal-english [params navigator offsets]
+  (let [[arg navigator] (next-arg navigator)]
+    (if (= 0 arg)
+      (print "zero")  ;;TODO print to *out*
+      (let [abs-arg (if (neg? arg) (- arg) arg) ; some numbers are too big for Math/abs (is this true?)
+            parts (remainders 1000 abs-arg)]
+        (if (<= (count parts) (count english-scale-numbers))
+          (let [parts-strs (map format-simple-cardinal parts)
+                full-str (add-english-scales parts-strs 0)]
+            (print (str (if (neg? arg) "minus ") full-str)))  ;;TODO print to *out*
+          (format-integer ;; for numbers > 10^63, we fall back on ~D
+            10
+            {:mincol 0, :padchar \space, :commachar \, :commainterval 3, :colon true}
+            (init-navigator [arg])
+            {:mincol 0, :padchar 0, :commachar 0 :commainterval 0}))))
+    navigator))
+
+(defn- format-simple-ordinal
+  "Convert a number less than 1000 to a ordinal english string
+  Note this should only be used for the last one in the sequence"
+  [num]
+  (let [hundreds (quot num 100)
+        tens (rem num 100)]
+    (str
+      (if (pos? hundreds) (str (nth english-cardinal-units hundreds) " hundred"))
+      (if (and (pos? hundreds) (pos? tens)) " ")
+      (if (pos? tens)
+        (if (< tens 20)
+          (nth english-ordinal-units tens)
+          (let [ten-digit (quot tens 10)
+                unit-digit (rem tens 10)]
+            (if (and (pos? ten-digit) (not (pos? unit-digit)))
+              (nth english-ordinal-units ten-digit)
+              (str
+                (if (pos? ten-digit) (nth english-cardinal-tens ten-digit))
+                (if (and (pos? ten-digit) (pos? unit-digit)) "-")
+                (if (pos? unit-digit) (nth english-ordinal-units unit-digit))))))
+        (if (pos? hundreds) "th")))))
+
+(defn- format-ordinal-english [params navigator offsets]
+  (let [[arg navigator] (next-arg navigator)]
+    (if (= 0 arg)
+      (print "zeroth")  ;;TODO print to *out*
+      (let [abs-arg (if (neg? arg) (- arg) arg) ; some numbers are too big for Math/abs (is this true?)
+            parts (remainders 1000 abs-arg)]
+        (if (<= (count parts) (count english-scale-numbers))
+          (let [parts-strs (map format-simple-cardinal (drop-last parts))
+                head-str (add-english-scales parts-strs 1)
+                tail-str (format-simple-ordinal (last parts))]
+            (print (str (if (neg? arg) "minus ")  ;;TODO print to *out*
+                        (cond
+                          (and (not (empty? head-str)) (not (empty? tail-str)))
+                          (str head-str ", " tail-str)
+
+                          (not (empty? head-str)) (str head-str "th")
+                          :else tail-str))))
+          (do (format-integer ;for numbers > 10^63, we fall back on ~D
+                10
+                {:mincol 0, :padchar \space, :commachar \, :commainterval 3, :colon true}
+                (init-navigator [arg])
+                {:mincol 0, :padchar 0, :commachar 0 :commainterval 0})
+              (let [low-two-digits (rem arg 100)
+                    not-teens (or (< 11 low-two-digits) (> 19 low-two-digits))
+                    low-digit (rem low-two-digits 10)]
+                (print (cond   ;;TODO print to *out*
+                         (and (== low-digit 1) not-teens) "st"
+                         (and (== low-digit 2) not-teens) "nd"
+                         (and (== low-digit 3) not-teens) "rd"
+                         :else "th")))))))
+    navigator))
+
 ;;======================================================================
 ;; dispatch.clj
 ;;======================================================================

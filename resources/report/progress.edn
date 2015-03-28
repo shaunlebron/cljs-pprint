@@ -114,4 +114,9 @@
  "english-cardinal-tens"  :same-name
  "english-ordinal-tens"   :same-name
  "english-scale-numbers"  :same-name
+ "format-simple-cardinal" :same-name
+ "add-english-scales"     :same-name
+ "format-cardinal-english" :same-name
+ "format-simple-ordinal"  :same-name
+ "format-ordinal-english" :same-name
  }
