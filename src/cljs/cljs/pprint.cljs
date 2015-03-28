@@ -982,6 +982,43 @@ http://www.lispworks.com/documentation/HyperSpec/Body/22_c.htm"
                     (init-navigator [arg]) nil))
     arg-navigator))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Support for english formats (~R and ~:R)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(def ^{:private true}
+     english-cardinal-units
+     ["zero" "one" "two" "three" "four" "five" "six" "seven" "eight" "nine"
+      "ten" "eleven" "twelve" "thirteen" "fourteen"
+      "fifteen" "sixteen" "seventeen" "eighteen" "nineteen"])
+
+(def ^{:private true}
+     english-ordinal-units
+     ["zeroth" "first" "second" "third" "fourth" "fifth" "sixth" "seventh" "eighth" "ninth"
+      "tenth" "eleventh" "twelfth" "thirteenth" "fourteenth"
+      "fifteenth" "sixteenth" "seventeenth" "eighteenth" "nineteenth"])
+
+(def ^{:private true}
+     english-cardinal-tens
+     ["" "" "twenty" "thirty" "forty" "fifty" "sixty" "seventy" "eighty" "ninety"])
+
+(def ^{:private true}
+     english-ordinal-tens
+     ["" "" "twentieth" "thirtieth" "fortieth" "fiftieth"
+      "sixtieth" "seventieth" "eightieth" "ninetieth"])
+
+;; We use "short scale" for our units (see http://en.wikipedia.org/wiki/Long_and_short_scales)
+;; Number names from http://www.jimloy.com/math/billion.htm
+;; We follow the rules for writing numbers from the Blue Book
+;; (http://www.grammarbook.com/numbers/numbers.asp)
+(def ^{:private true}
+     english-scale-numbers
+     ["" "thousand" "million" "billion" "trillion" "quadrillion" "quintillion"
+      "sextillion" "septillion" "octillion" "nonillion" "decillion"
+      "undecillion" "duodecillion" "tredecillion" "quattuordecillion"
+      "quindecillion" "sexdecillion" "septendecillion"
+      "octodecillion" "novemdecillion" "vigintillion"])
+
 ;;======================================================================
 ;; dispatch.clj
 ;;======================================================================

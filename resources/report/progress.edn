@@ -109,4 +109,9 @@
  "opt-base-str"           :same-name
  "group-by*"              :same-name
  "format-integer"         :same-name
+ "english-cardinal-units" :same-name
+ "english-ordinal-units"  :same-name
+ "english-cardinal-tens"  :same-name
+ "english-ordinal-tens"   :same-name
+ "english-scale-numbers"  :same-name
  }
