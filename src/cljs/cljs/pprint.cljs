@@ -1233,6 +1233,294 @@ http://www.lispworks.com/documentation/HyperSpec/Body/22_c.htm"
       args
       format)))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Support for real number formats
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; TODO - return exponent as int to eliminate double conversion
+(defn- float-parts-base
+  "Produce string parts for the mantissa (normalize 1-9) and exponent"
+  [f]
+  (let [s (string/lower-case (str f))
+        exploc (.indexOf s \e)
+        dotloc (.indexOf s \.)]
+    (if (neg? exploc)
+      (if (neg? dotloc)
+        [s (str (dec (count s)))]
+        [(str (subs s 0 dotloc) (subs s (inc dotloc))) (str (dec dotloc))])
+      (if (neg? dotloc)
+        [(subs s 0 exploc) (subs s (inc exploc))]
+        [(str (subs s 0 1) (subs s 2 exploc)) (subs s (inc exploc))]))))
+
+(defn- float-parts
+  "Take care of leading and trailing zeros in decomposed floats"
+  [f]
+  (let [[m e] (float-parts-base f)
+        m1 (rtrim m \0)
+        m2 (ltrim m1 \0)
+        delta (- (count m1) (count m2))
+        e (if (and (pos? (count e)) (= (nth e 0) \+)) (subs e 1) e)]
+    (if (empty? m2)
+      ["0" 0]
+      [m2 (- (js/parseInt e) delta)])))
+
+(defn- inc-s
+  "Assumption: The input string consists of one or more decimal digits,
+  and no other characters. Return a string containing one or more
+  decimal digits containing a decimal number one larger than the input
+  string. The output string will always be the same length as the input
+  string, or one character longer."
+  [s]
+  (let [len-1 (dec (count s))]
+    (loop [i (int len-1)]
+      (cond
+        (neg? i) (apply str "1" (repeat (inc len-1) "0"))
+        (= \9 (.charAt s i)) (recur (dec i))
+        :else (apply str (subs s 0 i)
+                     (char (inc (int (.charAt s i))))
+                     (repeat (- len-1 i) "0"))))))
+
+(defn- round-str [m e d w]
+  (if (or d w)
+    (let [len (count m)
+          ;; Every formatted floating point number should include at
+          ;; least one decimal digit and a decimal point.
+          ;; TODO: NB: This is a *bug* in the original code. w is used in
+          ;; calculations below but could potentially be nil. cljs gives
+          ;; compilation warnings.
+          w (if w (max 2 w))
+          round-pos (cond
+                      ;; If d was given, that forces the rounding
+                      ;; position, regardless of any width that may
+                      ;; have been specified.
+                      d (+ e d 1)
+                      ;; Otherwise w was specified, so pick round-pos
+                      ;; based upon that.
+                      ;; If e>=0, then abs value of number is >= 1.0,
+                      ;; and e+1 is number of decimal digits before the
+                      ;; decimal point when the number is written
+                      ;; without scientific notation. Never round the
+                      ;; number before the decimal point.
+                      (>= e 0) (max (inc e) (dec w))
+                      ;; e < 0, so number abs value < 1.0
+                      :else (+ w e))
+          [m1 e1 round-pos len] (if (= round-pos 0)
+                                  [(str "0" m) (inc e) 1 (inc len)]
+                                  [m e round-pos len])]
+      (if round-pos
+        (if (neg? round-pos)
+          ["0" 0 false]
+          (if (> len round-pos)
+            (let [round-char (nth m1 round-pos)
+                  result (subs m1 0 round-pos)]
+              (if (>= (int round-char) (int \5))
+                (let [round-up-result (inc-s result)
+                      expanded (> (count round-up-result) (count result))]
+                  [(if expanded
+                     (subs round-up-result 0 (dec (count round-up-result)))
+                     round-up-result)
+                   e1 expanded])
+                [result e1 false]))
+            [m e false]))
+        [m e false]))
+    [m e false]))
+
+(defn- expand-fixed [m e d]
+  (let [[m1 e1] (if (neg? e)
+                  [(str (apply str (repeat (dec (- e)) \0)) m) -1]
+                  [m e])
+        len (count m1)
+        target-len (if d (+ e1 d 1) (inc e1))]
+    (if (< len target-len)
+      (str m1 (apply str (repeat (- target-len len) \0)))
+      m1)))
+
+(defn- insert-decimal
+  "Insert the decimal point at the right spot in the number to match an exponent"
+  [m e]
+  (if (neg? e)
+    (str "." m)
+    (let [loc (inc e)]
+      (str (subs m 0 loc) "." (subs m loc)))))
+
+(defn- get-fixed [m e d]
+  (insert-decimal (expand-fixed m e d) e))
+
+(defn- insert-scaled-decimal
+  "Insert the decimal point at the right spot in the number to match an exponent"
+  [m k]
+  (if (neg? k)
+    (str "." m)
+    (str (subs m 0 k) "." (subs m k))))
+
+;;TODO: No ratio, so not sure what to do here
+(defn- convert-ratio [x]
+  x)
+
+;; the function to render ~F directives
+;; TODO: support rationals. Back off to ~D/~A in the appropriate cases
+(defn- fixed-float [params navigator offsets]
+  (let [w (:w params)
+        d (:d params)
+        [arg navigator] (next-arg navigator)
+        [sign abs] (if (neg? arg) ["-" (- arg)] ["+" arg])
+        abs (convert-ratio abs)
+        [mantissa exp] (float-parts abs)
+        scaled-exp (+ exp (:k params))
+        add-sign (or (:at params) (neg? arg))
+        append-zero (and (not d) (<= (dec (count mantissa)) scaled-exp))
+        [rounded-mantissa scaled-exp expanded] (round-str mantissa scaled-exp
+                                                          d (if w (- w (if add-sign 1 0))))
+        fixed-repr (get-fixed rounded-mantissa (if expanded (inc scaled-exp) scaled-exp) d)
+        fixed-repr (if (and w d
+                            (>= d 1)
+                            (= (.charAt fixed-repr 0) \0)
+                            (= (.charAt fixed-repr 1) \.)
+                            (> (count fixed-repr) (- w (if add-sign 1 0))))
+                     (subs fixed-repr 1)    ;chop off leading 0
+                     fixed-repr)
+        prepend-zero (= (first fixed-repr) \.)]
+    (if w
+      (let [len (count fixed-repr)
+            signed-len (if add-sign (inc len) len)
+            prepend-zero (and prepend-zero (not (>= signed-len w)))
+            append-zero (and append-zero (not (>= signed-len w)))
+            full-len (if (or prepend-zero append-zero)
+                       (inc signed-len)
+                       signed-len)]
+        (if (and (> full-len w) (:overflowchar params))
+          (print (apply str (repeat w (:overflowchar params)))) ;;TODO print to *out*
+          (print (str   ;;TODO print to *out*
+                   (apply str (repeat (- w full-len) (:padchar params)))
+                   (if add-sign sign)
+                   (if prepend-zero "0")
+                   fixed-repr
+                   (if append-zero "0")))))
+      (print (str   ;;TODO print to *out*
+               (if add-sign sign)
+               (if prepend-zero "0")
+               fixed-repr
+               (if append-zero "0"))))
+    navigator))
+
+;; the function to render ~E directives
+;; TODO: support rationals. Back off to ~D/~A in the appropriate cases
+;; TODO: define ~E representation for Infinity
+(defn- exponential-float [params navigator offset]
+  (let [[arg navigator] (next-arg navigator)
+        arg (convert-ratio arg)]
+    (loop [[mantissa exp] (float-parts (if (neg? arg) (- arg) arg))]
+      (let [w (:w params)
+            d (:d params)
+            e (:e params)
+            k (:k params)
+            expchar (or (:exponentchar params) \E)
+            add-sign (or (:at params) (neg? arg))
+            prepend-zero (<= k 0)
+            scaled-exp (- exp (dec k))
+            scaled-exp-str (str (Math/abs scaled-exp))
+            scaled-exp-str (str expchar (if (neg? scaled-exp) \- \+)
+                                (if e (apply str
+                                             (repeat
+                                               (- e
+                                                  (count scaled-exp-str))
+                                               \0)))
+                                scaled-exp-str)
+            exp-width (count scaled-exp-str)
+            base-mantissa-width (count mantissa)
+            scaled-mantissa (str (apply str (repeat (- k) \0))
+                                 mantissa
+                                 (if d
+                                   (apply str
+                                          (repeat
+                                            (- d (dec base-mantissa-width)
+                                               (if (neg? k) (- k) 0)) \0))))
+            w-mantissa (if w (- w exp-width))
+            [rounded-mantissa _ incr-exp] (round-str
+                                            scaled-mantissa 0
+                                            (cond
+                                              (= k 0) (dec d)
+                                              (pos? k) d
+                                              (neg? k) (dec d))
+                                            (if w-mantissa
+                                              (- w-mantissa (if add-sign 1 0))))
+            full-mantissa (insert-scaled-decimal rounded-mantissa k)
+            append-zero (and (= k (count rounded-mantissa)) (nil? d))]
+        (if (not incr-exp)
+          (if w
+            (let [len (+ (count full-mantissa) exp-width)
+                  signed-len (if add-sign (inc len) len)
+                  prepend-zero (and prepend-zero (not (= signed-len w)))
+                  full-len (if prepend-zero (inc signed-len) signed-len)
+                  append-zero (and append-zero (< full-len w))]
+              (if (and (or (> full-len w) (and e (> (- exp-width 2) e)))
+                       (:overflowchar params))
+                (print (apply str (repeat w (:overflowchar params))))  ;;TODO print to *out*
+                (print (str   ;;TODO print to *out*
+                         (apply str
+                                (repeat
+                                  (- w full-len (if append-zero 1 0))
+                                  (:padchar params)))
+                         (if add-sign (if (neg? arg) \- \+))
+                         (if prepend-zero "0")
+                         full-mantissa
+                         (if append-zero "0")
+                         scaled-exp-str))))
+            (print (str   ;;TODO print to *out*
+                     (if add-sign (if (neg? arg) \- \+))
+                     (if prepend-zero "0")
+                     full-mantissa
+                     (if append-zero "0")
+                     scaled-exp-str)))
+          (recur [rounded-mantissa (inc exp)]))))
+    navigator))
+
+;; the function to render ~G directives
+;; This just figures out whether to pass the request off to ~F or ~E based
+;; on the algorithm in CLtL.
+;; TODO: support rationals. Back off to ~D/~A in the appropriate cases
+;; TODO: refactor so that float-parts isn't called twice
+(defn- general-float [params navigator offsets]
+  (let [[arg _] (next-arg navigator)
+        arg (convert-ratio arg)
+        [mantissa exp] (float-parts (if (neg? arg) (- arg) arg))
+        w (:w params)
+        d (:d params)
+        e (:e params)
+        n (if (= arg 0.0) 0 (inc exp))
+        ee (if e (+ e 2) 4)
+        ww (if w (= w ee))
+        d (if d d (max (count mantissa) (min n 7)))
+        dd (- d n)]
+    (if (<= 0 dd d)
+      (let [navigator (fixed-float {:w ww, :d dd, :k 0,
+                                    :overflowchar (:overflowchar params),
+                                    :padchar (:padchar params), :at (:at params)}
+                                   navigator offsets)]
+        (print (apply str (repeat ee \space)))   ;;TODO print to *out*
+        navigator)
+      (exponential-float params navigator offsets))))
+
+;; the function to render ~$ directives
+;; TODO: support rationals. Back off to ~D/~A in the appropriate cases
+(defn- dollar-float [params navigator offsets]
+  (let [[arg navigator] (next-arg navigator)
+        [mantissa exp] (float-parts (Math/abs arg))
+        d (:d params)  ; digits after the decimal
+        n (:n params)  ; minimum digits before the decimal
+        w (:w params)  ; minimum field width
+        add-sign (or (:at params) (neg? arg))
+        [rounded-mantissa scaled-exp expanded] (round-str mantissa exp d nil)
+        fixed-repr (get-fixed rounded-mantissa (if expanded (inc scaled-exp) scaled-exp) d)
+        full-repr (str (apply str (repeat (- n (.indexOf fixed-repr \.)) \0)) fixed-repr)
+        full-len (+ (count full-repr) (if add-sign 1 0))]
+    (print (str    ;;TODO print to *out*
+             (if (and (:colon params) add-sign) (if (neg? arg) \- \+))
+             (apply str (repeat (- w full-len) (:padchar params)))
+             (if (and (not (:colon params)) add-sign) (if (neg? arg) \- \+))
+             full-repr))
+    navigator))
+
 ;;======================================================================
 ;; dispatch.clj
 ;;======================================================================

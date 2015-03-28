@@ -130,4 +130,17 @@
  "plain-character"        :same-name
  "abort?"                 :same-name
  "execute-sub-format"     :same-name
+ "float-parts-base"       :same-name
+ "float-parts"            :same-name
+ "inc-s"                  :same-name
+ "round-str"              :same-name
+ "expand-fixed"           :same-name
+ "insert-decimal"         :same-name
+ "get-fixed"              :same-name
+ "insert-scaled-decimal"  :same-name
+ "convert-ratio"          :same-name
+ "fixed-float"            :same-name
+ "exponential-float"      :same-name
+ "general-float"          :same-name
+ "dollar-float"           :same-name
  }
