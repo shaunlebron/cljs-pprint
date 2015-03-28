@@ -72,4 +72,18 @@
  "add-to-buffer"          :same-name
  "write-buffered-output"  :same-name
  "write-white-space"      :same-name
+ "deftype"                :same-name
+ "buffer-blob"            :same-name
+ "nl-t"                   :same-name
+ "start-block-t"          :same-name
+ "end-block-t"            :same-name
+ "indent-t"               :same-name
+ "check-enumerated-arg"   :same-name
+ "level-exceeded"         :same-name
+ "pprint-newline"         :same-name
+ "write-out"              :same-name
+ "parse-lb-options"       :same-name
+ "pprint-logical-block"   :same-name
+ "pll-mod-body"           :same-name
+ "print-length-loop"      :same-name
  }
