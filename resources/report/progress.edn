@@ -195,4 +195,6 @@
  "needs-pretty"           :same-name
  "execute-format"         :same-name
  "cached-compile"         :same-name
+ "formatter"              :same-name
+ "formatter-out"          :same-name
  }

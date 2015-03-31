@@ -105,3 +105,34 @@
   [& directives]
   `(def ^{:private true}
         ~'directive-table (hash-map ~@(mapcat process-directive-table-element directives))))
+
+(defmacro formatter
+  "Makes a function which can directly run format-in. The function is
+fn [stream & args] ... and returns nil unless the stream is nil (meaning
+output to a string) in which case it returns the resulting string.
+
+format-in can be either a control string or a previously compiled format."
+  [format-in]
+  `(let [format-in# ~format-in
+         my-c-c# #'cljs.pprint/cached-compile
+         my-e-f# #'cljs.pprint/execute-format
+         my-i-n# #'cljs.pprint/init-navigator
+         cf# (if (string? format-in#) (my-c-c# format-in#) format-in#)]
+     (fn [stream# & args#]
+       (let [navigator# (my-i-n# args#)]
+         (my-e-f# stream# cf# navigator#)))))
+
+(defmacro formatter-out
+  "Makes a function which can directly run format-in. The function is
+fn [& args] ... and returns nil. This version of the formatter macro is
+designed to be used with *out* set to an appropriate Writer. In particular,
+this is meant to be used as part of a pretty printer dispatch method.
+
+format-in can be either a control string or a previously compiled format."
+  [format-in]
+  `(let [format-in# ~format-in
+         cf# (if (string? format-in#) (#'cljs.pprint/cached-compile format-in#) format-in#)]
+     (fn [& args#]
+       (let [navigator# (#'cljs.pprint/init-navigator args#)]
+         (#'cljs.pprint/execute-format cf# navigator#)))))
+
