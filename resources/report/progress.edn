@@ -3,6 +3,7 @@
  "setf"                   :same-name
  "pretty-writer"          :same-name
  "pprint"                 ["pprint*" "pprint-sb" "pprint-str" "pprint"]
+ "set-pprint-dispatch"    :same-name
  "pretty-writer?"         :same-name
  "make-pretty-writer"     :same-name
  "*print-right-margin*"        :same-name
