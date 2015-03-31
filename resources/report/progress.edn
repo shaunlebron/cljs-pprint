@@ -183,6 +183,7 @@
  "check-flags"            :same-name
  "map-params"             :same-name
  "compile-directive"      :same-name
+ "compile-raw-string"     :same-name
  "right-bracket"          :same-name
  "separator?"             :same-name
  "else-separator?"        :same-name

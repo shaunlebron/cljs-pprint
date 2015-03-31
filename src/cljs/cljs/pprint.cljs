@@ -2429,7 +2429,7 @@ of parameters as well."
        [remainder offset])]))
 
 (defn- compile-raw-string [s offset]
-  (compiled-directive. (fn [_ a _] (print s) a) nil {:string s} offset))
+  (compiled-directive. (fn [_ a _] (print s) a) nil {:string s} offset)) ;; TODO print to *out*
 
 (defn- right-bracket [this] (:right (:bracket-info (:def this))))
 
