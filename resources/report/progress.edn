@@ -198,4 +198,6 @@
  "cached-compile"         :same-name
  "formatter"              :same-name
  "formatter-out"          :same-name
+ "table-ize"              :same-name
+ "write-option-table"     :same-name
  }
