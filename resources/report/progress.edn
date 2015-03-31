@@ -190,6 +190,7 @@
  "process-bracket"        :same-name
  "process-clause"         :same-name
  "collect-clauses"        :same-name
+ "process-nesting"        :same-name
  "compile-format"         :same-name
  "needs-pretty"           :same-name
  "execute-format"         :same-name
