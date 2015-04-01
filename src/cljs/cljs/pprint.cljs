@@ -7,7 +7,7 @@
 ;   You must not remove this notice, or any other, from this software.
 
 (ns cljs.pprint
-  (:refer-clojure :exclude [deftype])
+  (:refer-clojure :exclude [deftype print println pr prn])
   (:require-macros
     [cljs.pprint :as m :refer [with-pretty-writer getf setf deftype
                                pprint-logical-block print-length-loop
@@ -18,6 +18,24 @@
   (:import goog.string.StringBuffer))
 
 (def ^:dynamic *out* nil)
+
+;;======================================================================
+;; override print fns to use *out*
+;;======================================================================
+
+(defn- print [& more]
+  (-write *out* (apply print-str more)))
+
+(defn- println [& more]
+  (apply print more)
+  (-write *out* \newline))
+
+(defn- ^:dynamic pr [& more]
+  (-write *out* (apply pr-str more)))
+
+(defn- prn [& more]
+  (apply pr more)
+  (-write *out* \newline))
 
 ;;======================================================================
 ;; cljs specific utils
@@ -701,7 +719,7 @@ Normal library clients should use the standard \"write\" interface. "
                             *print-length*
                             (>= *current-length* *print-length*))]
     (if-not *print-pretty*
-      (pr object) ;;TODO this needs to go to *out* I think
+      (pr object)
       (if length-reached
         (-write *out* "...") ;;TODO could this (incorrectly) print ... on the next line?
         (do
@@ -936,8 +954,8 @@ http://www.lispworks.com/documentation/HyperSpec/Body/22_c.htm"
                       (:colinc params))))
         chars (apply str (repeat (- width base-width) (:padchar params)))]
     (if (:at params)
-      (print (str chars base-output))  ;;TODO need to print to *out*
-      (print (str base-output chars))) ;;TODO need to print to *out*
+      (print (str chars base-output))
+      (print (str base-output chars)))
     arg-navigator))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1015,7 +1033,7 @@ http://www.lispworks.com/documentation/HyperSpec/Body/22_c.htm"
                                                  (:padchar params)))
                               signed-str)
                          signed-str)]
-        (print padded-str))  ;;TODO need to print to *out*
+        (print padded-str))
       (format-ascii print-str {:mincol (:mincol params) :colinc 1 :minpad 0
                                :padchar (:padchar params) :at true}
                     (init-navigator [arg]) nil))
@@ -1102,13 +1120,13 @@ http://www.lispworks.com/documentation/HyperSpec/Body/22_c.htm"
 (defn- format-cardinal-english [params navigator offsets]
   (let [[arg navigator] (next-arg navigator)]
     (if (= 0 arg)
-      (print "zero")  ;;TODO print to *out*
+      (print "zero")
       (let [abs-arg (if (neg? arg) (- arg) arg) ; some numbers are too big for Math/abs (is this true?)
             parts (remainders 1000 abs-arg)]
         (if (<= (count parts) (count english-scale-numbers))
           (let [parts-strs (map format-simple-cardinal parts)
                 full-str (add-english-scales parts-strs 0)]
-            (print (str (if (neg? arg) "minus ") full-str)))  ;;TODO print to *out*
+            (print (str (if (neg? arg) "minus ") full-str)))
           (format-integer ;; for numbers > 10^63, we fall back on ~D
             10
             {:mincol 0, :padchar \space, :commachar \, :commainterval 3, :colon true}
@@ -1141,14 +1159,14 @@ http://www.lispworks.com/documentation/HyperSpec/Body/22_c.htm"
 (defn- format-ordinal-english [params navigator offsets]
   (let [[arg navigator] (next-arg navigator)]
     (if (= 0 arg)
-      (print "zeroth")  ;;TODO print to *out*
+      (print "zeroth")
       (let [abs-arg (if (neg? arg) (- arg) arg) ; some numbers are too big for Math/abs (is this true?)
             parts (remainders 1000 abs-arg)]
         (if (<= (count parts) (count english-scale-numbers))
           (let [parts-strs (map format-simple-cardinal (drop-last parts))
                 head-str (add-english-scales parts-strs 1)
                 tail-str (format-simple-ordinal (last parts))]
-            (print (str (if (neg? arg) "minus ")  ;;TODO print to *out*
+            (print (str (if (neg? arg) "minus ")
                         (cond
                           (and (not (empty? head-str)) (not (empty? tail-str)))
                           (str head-str ", " tail-str)
@@ -1163,7 +1181,7 @@ http://www.lispworks.com/documentation/HyperSpec/Body/22_c.htm"
               (let [low-two-digits (rem arg 100)
                     not-teens (or (< 11 low-two-digits) (> 19 low-two-digits))
                     low-digit (rem low-two-digits 10)]
-                (print (cond   ;;TODO print to *out*
+                (print (cond
                          (and (== low-digit 1) not-teens) "st"
                          (and (== low-digit 2) not-teens) "nd"
                          (and (== low-digit 3) not-teens) "rd"
@@ -1198,7 +1216,7 @@ http://www.lispworks.com/documentation/HyperSpec/Body/22_c.htm"
                pos (dec (count digits))
                digits digits]
           (if (empty? digits)
-            (print (apply str acc))  ;;TODO print to *out*
+            (print (apply str acc))
             (let [digit (first digits)]
               (recur (if (= 0 digit)
                        acc
@@ -1231,8 +1249,8 @@ http://www.lispworks.com/documentation/HyperSpec/Body/22_c.htm"
         base-char (bit-and as-int 127)
         meta (bit-and as-int 128)
         special (get special-chars base-char)]
-    (if (> meta 0) (print "Meta-")) ;;TODO print to *out*
-    (print (cond  ;;TODO print to *out*
+    (if (> meta 0) (print "Meta-"))
+    (print (cond
              special special
              (< base-char 32) (str "Control-" (char (+ base-char 64)))
              (= base-char 127) "Control-?"
@@ -1244,12 +1262,12 @@ http://www.lispworks.com/documentation/HyperSpec/Body/22_c.htm"
     (condp = (:char-format params)
       \o (cl-format true "\\o~3, '0o" (int c))
       \u (cl-format true "\\u~4, '0x" (int c))
-      nil (pr c))  ;;TODO print to *out*
+      nil (pr c))
     navigator))
 
 (defn- plain-character [params navigator offsets]
   (let [[char navigator] (next-arg navigator)]
-    (print char)   ;;TODO print to *out*
+    (print char)
     navigator))
 
 ;; Check to see if a result is an abort (~^) construct
@@ -1428,14 +1446,14 @@ http://www.lispworks.com/documentation/HyperSpec/Body/22_c.htm"
                        (inc signed-len)
                        signed-len)]
         (if (and (> full-len w) (:overflowchar params))
-          (print (apply str (repeat w (:overflowchar params)))) ;;TODO print to *out*
-          (print (str   ;;TODO print to *out*
+          (print (apply str (repeat w (:overflowchar params))))
+          (print (str
                    (apply str (repeat (- w full-len) (:padchar params)))
                    (if add-sign sign)
                    (if prepend-zero "0")
                    fixed-repr
                    (if append-zero "0")))))
-      (print (str   ;;TODO print to *out*
+      (print (str
                (if add-sign sign)
                (if prepend-zero "0")
                fixed-repr
@@ -1494,8 +1512,8 @@ http://www.lispworks.com/documentation/HyperSpec/Body/22_c.htm"
                   append-zero (and append-zero (< full-len w))]
               (if (and (or (> full-len w) (and e (> (- exp-width 2) e)))
                        (:overflowchar params))
-                (print (apply str (repeat w (:overflowchar params))))  ;;TODO print to *out*
-                (print (str   ;;TODO print to *out*
+                (print (apply str (repeat w (:overflowchar params))))
+                (print (str
                          (apply str
                                 (repeat
                                   (- w full-len (if append-zero 1 0))
@@ -1505,7 +1523,7 @@ http://www.lispworks.com/documentation/HyperSpec/Body/22_c.htm"
                          full-mantissa
                          (if append-zero "0")
                          scaled-exp-str))))
-            (print (str   ;;TODO print to *out*
+            (print (str
                      (if add-sign (if (neg? arg) \- \+))
                      (if prepend-zero "0")
                      full-mantissa
@@ -1536,7 +1554,7 @@ http://www.lispworks.com/documentation/HyperSpec/Body/22_c.htm"
                                     :overflowchar (:overflowchar params),
                                     :padchar (:padchar params), :at (:at params)}
                                    navigator offsets)]
-        (print (apply str (repeat ee \space)))   ;;TODO print to *out*
+        (print (apply str (repeat ee \space)))
         navigator)
       (exponential-float params navigator offsets))))
 
@@ -1553,7 +1571,7 @@ http://www.lispworks.com/documentation/HyperSpec/Body/22_c.htm"
         fixed-repr (get-fixed rounded-mantissa (if expanded (inc scaled-exp) scaled-exp) d)
         full-repr (str (apply str (repeat (- n (.indexOf fixed-repr \.)) \0)) fixed-repr)
         full-len (+ (count full-repr) (if add-sign 1 0))]
-    (print (str    ;;TODO print to *out*
+    (print (str
              (if (and (:colon params) add-sign) (if (neg? arg) \- \+))
              (apply str (repeat (- w full-len) (:padchar params)))
              (if (and (not (:colon params)) add-sign) (if (neg? arg) \- \+))
@@ -1769,7 +1787,7 @@ http://www.lispworks.com/documentation/HyperSpec/Body/22_c.htm"
         pad-str (apply str (repeat pad (:padchar params)))]
     (if (and eol-str (> (+ (get-column (:base @@*out*)) min-remaining result-columns)
                         max-columns))
-      (print eol-str))  ;;TODO print to *out*
+      (print eol-str))
     (loop [slots slots
            extra-pad extra-pad
            strs strs
@@ -1777,7 +1795,7 @@ http://www.lispworks.com/documentation/HyperSpec/Body/22_c.htm"
                         (and (= (count strs) 1) (not (:at params))))]
       (if (seq strs)
         (do
-          (print (str (if (not pad-only) (first strs))  ;;TODO print to *out*
+          (print (str (if (not pad-only) (first strs))
                       (if (or pad-only (next strs) (:at params)) pad-str)
                       (if (pos? extra-pad) (:padchar params))))
           (recur
@@ -1990,8 +2008,8 @@ not a pretty writer (which keeps track of columns), this function always outputs
   []
   (if (satisfies? IDeref *out*)
     (if (not (= 0 (get-column (:base @@*out*))))
-      (prn))  ;; TODO print to *out*
-    (prn)))   ;; TODO print to *out*
+      (prn))
+    (prn)))
 
 (defn- absolute-tabulation [params navigator offsets]
   (let [colnum (:colnum params)
@@ -2001,7 +2019,7 @@ not a pretty writer (which keeps track of columns), this function always outputs
                       (< current colnum) (- colnum current)
                       (= colinc 0) 0
                       :else (- colinc (rem (- current colnum) colinc)))]
-    (print (apply str (repeat space-count \space))))   ;; TODO print to *out*
+    (print (apply str (repeat space-count \space))))
   navigator)
 
 (defn- relative-tabulation [params navigator offsets]
@@ -2010,7 +2028,7 @@ not a pretty writer (which keeps track of columns), this function always outputs
         start-col (+ colrel (get-column (:base @@*out*)))
         offset (if (pos? colinc) (rem start-col colinc) 0)
         space-count (+ colrel (if (= 0 offset) 0 (- colinc offset)))]
-    (print (apply str (repeat space-count \space))))  ;; TODO print to *out*
+    (print (apply str (repeat space-count \space))))
   navigator)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2150,7 +2168,7 @@ not a pretty writer (which keeps track of columns), this function always outputs
     #{} {}
     (fn [params arg-navigator offsets]
       (dotimes [i (:count params)]
-        (prn))   ;; TODO print to *out*
+        (prn))
       arg-navigator))
 
   (\&
@@ -2160,7 +2178,7 @@ not a pretty writer (which keeps track of columns), this function always outputs
       (let [cnt (:count params)]
         (if (pos? cnt) (fresh-line))
         (dotimes [i (dec cnt)]
-          (prn)))   ;; TODO print to *out*
+          (prn)))
       arg-navigator))
 
   (\|
@@ -2168,7 +2186,7 @@ not a pretty writer (which keeps track of columns), this function always outputs
     #{} {}
     (fn [params arg-navigator offsets]
       (dotimes [i (:count params)]
-        (print \formfeed))   ;; TODO print to *out*
+        (print \formfeed))
       arg-navigator))
 
   (\~
@@ -2176,7 +2194,7 @@ not a pretty writer (which keeps track of columns), this function always outputs
     #{} {}
     (fn [params arg-navigator offsets]
       (let [n (:n params)]
-        (print (apply str (repeat n \~)))   ;; TODO print to *out*
+        (print (apply str (repeat n \~)))
         arg-navigator)))
 
   (\newline ;; Whitespace supression is handled in the compilation loop
@@ -2184,7 +2202,7 @@ not a pretty writer (which keeps track of columns), this function always outputs
     #{:colon :at} {}
     (fn [params arg-navigator offsets]
       (if (:at params)
-        (prn))   ;; TODO print to *out*
+        (prn))
       arg-navigator))
 
   (\T
@@ -2454,7 +2472,7 @@ of parameters as well."
        [remainder offset])]))
 
 (defn- compile-raw-string [s offset]
-  (compiled-directive. (fn [_ a _] (print s) a) nil {:string s} offset)) ;; TODO print to *out*
+  (compiled-directive. (fn [_ a _] (print s) a) nil {:string s} offset))
 
 (defn- right-bracket [this] (:right (:bracket-info (:def this))))
 
