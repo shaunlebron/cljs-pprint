@@ -11,7 +11,7 @@
   (:require-macros
     [cljs.pprint :as m :refer [with-pretty-writer getf setf deftype
                                pprint-logical-block print-length-loop
-                               defdirectives]])
+                               defdirectives formatter-out]])
   (:require
     [cljs.core :refer [IWriter IDeref]]
     [clojure.string :as string])
@@ -69,8 +69,8 @@
          acc []]
     (let [[result new-context] (apply func [context])]
       (if (not result)
-        [acc new-context])
-      (recur new-context (conj acc result)))))
+        [acc new-context]
+        (recur new-context (conj acc result))))))
 
 (defn- consume-while [func initial-context]
   (loop [context initial-context
@@ -726,6 +726,69 @@ Normal library clients should use the standard \"write\" interface. "
           (if *current-length* (set! *current-length* (inc *current-length*)))
           (*print-pprint-dispatch* object))))
     length-reached))
+
+(defn write
+  "Write an object subject to the current bindings of the printer control variables.
+Use the kw-args argument to override individual variables for this call (and any
+recursive calls). Returns the string result if :stream is nil or nil otherwise.
+
+The following keyword arguments can be passed with values:
+  Keyword              Meaning                              Default value
+  :stream              Writer for output or nil             true (indicates *out*)
+  :base                Base to use for writing rationals    Current value of *print-base*
+  :circle*             If true, mark circular structures    Current value of *print-circle*
+  :length              Maximum elements to show in sublists Current value of *print-length*
+  :level               Maximum depth                        Current value of *print-level*
+  :lines*              Maximum lines of output              Current value of *print-lines*
+  :miser-width         Width to enter miser mode            Current value of *print-miser-width*
+  :dispatch            The pretty print dispatch function   Current value of *print-pprint-dispatch*
+  :pretty              If true, do pretty printing          Current value of *print-pretty*
+  :radix               If true, prepend a radix specifier   Current value of *print-radix*
+  :readably*           If true, print readably              Current value of *print-readably*
+  :right-margin        The column for the right margin      Current value of *print-right-margin*
+  :suppress-namespaces If true, no namespaces in symbols    Current value of *print-suppress-namespaces*
+
+  * = not yet supported
+"
+  [object & kw-args]
+  (let [options (merge {:stream true} (apply hash-map kw-args))]
+    ;;TODO rewrite this as a macro
+    (binding [cljs.pprint/*print-base* (:base options cljs.pprint/*print-base*)
+              ;;:case             *print-case*,
+              cljs.pprint/*print-circle* (:circle options cljs.pprint/*print-circle*)
+              ;;:escape           *print-escape*
+              ;;:gensym           *print-gensym*
+              cljs.core/*print-length* (:length options cljs.core/*print-length*)
+              cljs.core/*print-level* (:level options cljs.core/*print-level*)
+              cljs.pprint/*print-lines* (:lines options cljs.pprint/*print-lines*)
+              cljs.pprint/*print-miser-width* (:miser-width options cljs.pprint/*print-miser-width*)
+              cljs.pprint/*print-pprint-dispatch* (:dispatch options cljs.pprint/*print-pprint-dispatch*)
+              cljs.pprint/*print-pretty* (:pretty options cljs.pprint/*print-pretty*)
+              cljs.pprint/*print-radix* (:radix options cljs.pprint/*print-radix*)
+              cljs.core/*print-readably* (:readably options cljs.core/*print-readably*)
+              cljs.pprint/*print-right-margin* (:right-margin options cljs.pprint/*print-right-margin*)
+              cljs.pprint/*print-suppress-namespaces* (:suppress-namespaces options cljs.pprint/*print-suppress-namespaces*)]
+      ;;TODO enable printing base
+      #_[bindings (if (or (not (= *print-base* 10)) *print-radix*)
+                  {#'pr pr-with-base}
+                  {})]
+      (binding []
+        (let [sb (StringBuffer.)
+              optval (if (contains? options :stream)
+                       (:stream options)
+                       true)
+              base-writer (if (or (true? optval) (nil? optval))
+                            (StringBufferWriter. sb)
+                            optval)]
+          (if *print-pretty*
+            (with-pretty-writer base-writer
+                                (write-out object))
+            (binding [*out* base-writer]
+              (pr object)))
+          (if (true? optval)
+            (*print-fn* (str sb)))
+          (if (nil? optval)
+            (str sb)))))))
 
 (defn pprint
   ([object]
@@ -2713,6 +2776,8 @@ column number or pretty printing"
   ;;TODO: Update to handle arrays (?) and suppressing namespaces
   (-write *out* (pr-str obj)))
 
+(def pprint-set (formatter-out "~<#{~;~@{~w~^ ~:_~}~;}~:>"))
+
 (defmulti simple-dispatch
           "The pretty print dispatch function for simple data structure format."
           (fn [obj]
@@ -2720,12 +2785,14 @@ column number or pretty printing"
               (list? obj) :list
               (map? obj) :map
               (vector? obj) :vector
+              (set? obj) :set
               (nil? obj) nil
               :default :default)))
 
 (use-method simple-dispatch :list pprint-list)
 (use-method simple-dispatch :vector pprint-vector)
 (use-method simple-dispatch :map pprint-map)
+(use-method simple-dispatch :set pprint-set)
 (use-method simple-dispatch nil #(-write *out* (pr-str nil)))
 (use-method simple-dispatch :default pprint-simple-default)
 
