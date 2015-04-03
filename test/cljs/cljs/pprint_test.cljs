@@ -397,3 +397,55 @@
   (cl-format nil "~:(~A~)" nil) "Nil"
   (cl-format nil "~:(~A~)" "") ""
 )
+
+(simple-tests square-bracket-tests
+  ;; Tests for format without modifiers
+  (cl-format nil "I ~[don't ~]have one~%" 0) "I don't have one\n"
+  (cl-format nil "I ~[don't ~]have one~%" 1) "I have one\n"
+  (cl-format nil "I ~[don't ~;do ~]have one~%" 0) "I don't have one\n"
+  (cl-format nil "I ~[don't ~;do ~]have one~%" 1) "I do have one\n"
+  (cl-format nil "I ~[don't ~;do ~]have one~%" 2) "I have one\n"
+  (cl-format nil "I ~[don't ~:;do ~]have one~%" 0) "I don't have one\n"
+  (cl-format nil "I ~[don't ~:;do ~]have one~%" 1) "I do have one\n"
+  (cl-format nil "I ~[don't ~:;do ~]have one~%" 2) "I do have one\n"
+  (cl-format nil "I ~[don't ~:;do ~]have one~%" 700) "I do have one\n"
+
+  ;; Tests for format with a colon
+  (cl-format nil "I ~:[don't ~;do ~]have one~%" true) "I do have one\n"
+  (cl-format nil "I ~:[don't ~;do ~]have one~%" 700) "I do have one\n"
+  (cl-format nil "I ~:[don't ~;do ~]have one~%" '(a b)) "I do have one\n"
+  (cl-format nil "I ~:[don't ~;do ~]have one~%" nil) "I don't have one\n"
+  (cl-format nil "I ~:[don't ~;do ~]have one~%" false) "I don't have one\n"
+
+  ;; Tests for format with an at sign
+  (cl-format nil "We had ~D wins~@[ (out of ~D tries)~].~%" 15 nil) "We had 15 wins.\n"
+  (cl-format nil "We had ~D wins~@[ (out of ~D tries)~].~%" 15 17)
+  "We had 15 wins (out of 17 tries).\n"
+
+  ;; Format tests with directives
+  (cl-format nil "Max ~D: ~[Blue team ~D~;Red team ~D~:;No team ~A~].~%" 15, 0, 7)
+  "Max 15: Blue team 7.\n"
+  (cl-format nil "Max ~D: ~[Blue team ~D~;Red team ~D~:;No team ~A~].~%" 15, 1, 12)
+  "Max 15: Red team 12.\n"
+  (cl-format nil "Max ~D: ~[Blue team ~D~;Red team ~D~:;No team ~A~].~%"
+             15, -1, "(system failure)")
+  "Max 15: No team (system failure).\n"
+
+  ;; Nested format tests
+  (cl-format nil "Max ~D: ~[Blue team ~D~:[~; (complete success)~]~;Red team ~D~:;No team ~].~%"
+             15, 0, 7, true)
+  "Max 15: Blue team 7 (complete success).\n"
+  (cl-format nil "Max ~D: ~[Blue team ~D~:[~; (complete success)~]~;Red team ~D~:;No team ~].~%"
+             15, 0, 7, false)
+  "Max 15: Blue team 7.\n"
+
+  ;; Test the selector as part of the argument
+  (cl-format nil "The answer is ~#[nothing~;~D~;~D out of ~D~:;something crazy~].")
+  "The answer is nothing."
+  (cl-format nil "The answer is ~#[nothing~;~D~;~D out of ~D~:;something crazy~]." 4)
+  "The answer is 4."
+  (cl-format nil "The answer is ~#[nothing~;~D~;~D out of ~D~:;something crazy~]." 7 22)
+  "The answer is 7 out of 22."
+  (cl-format nil "The answer is ~#[nothing~;~D~;~D out of ~D~:;something crazy~]." 1 2 3 4)
+  "The answer is something crazy."
+)
