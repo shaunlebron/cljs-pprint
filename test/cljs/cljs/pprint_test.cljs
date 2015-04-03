@@ -351,3 +351,20 @@
   (cl-format nil "~13,10f" -1.23456789016) "-1.2345678902"
   (cl-format nil "~1,1f" 0.1) ".1"
 )
+
+(simple-tests ampersand-tests
+  (cl-format nil "The quick brown ~a jumped over ~d lazy dogs" 'elephant 5)
+  "The quick brown elephant jumped over 5 lazy dogs"
+  (cl-format nil "The quick brown ~&~a jumped over ~d lazy dogs" 'elephant 5)
+  "The quick brown \nelephant jumped over 5 lazy dogs"
+  (cl-format nil "The quick brown ~&~a jumped\n~& over ~d lazy dogs" 'elephant 5)
+  "The quick brown \nelephant jumped\n over 5 lazy dogs"
+  (cl-format nil "~&The quick brown ~&~a jumped\n~& over ~d lazy dogs" 'elephant 5)
+  "The quick brown \nelephant jumped\n over 5 lazy dogs"
+  (cl-format nil "~3&The quick brown ~&~a jumped\n~& over ~d lazy dogs" 'elephant 5)
+  "\n\nThe quick brown \nelephant jumped\n over 5 lazy dogs"
+  (cl-format nil "~@{~&The quick brown ~a jumped over ~d lazy dogs~}" 'elephant 5 'fox 10)
+  "The quick brown elephant jumped over 5 lazy dogs\nThe quick brown fox jumped over 10 lazy dogs"
+  (cl-format nil "I ~[don't ~:;d~&o ~]have one~%" 0) "I don't have one\n"
+  (cl-format nil "I ~[don't ~:;d~&o ~]have one~%" 1) "I d\no have one\n"
+)
