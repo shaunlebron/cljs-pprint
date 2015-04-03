@@ -563,3 +563,16 @@
   (cl-format nil "Coordinates are~@:{~:}~%" " ~#[none~;<~D>~:;[~D,~D]~]")
   "Coordinates are none\n"
 )
+
+;; TODO tests for ~^ in ~[ constructs and other brackets
+;; TODO test ~:^ generates an error when used improperly
+;; TODO test ~:^ works in ~@:{...~}
+(let [aseq '(a quick brown fox jumped over the lazy dog)
+      lseq (mapcat identity (for [x aseq] [x (.-length (name x))]))]
+  (simple-tests up-tests
+    (cl-format nil "~{~a~^, ~}" aseq) "a, quick, brown, fox, jumped, over, the, lazy, dog"
+    (cl-format nil "~{~a~0^, ~}" aseq) "a"
+    (cl-format nil "~{~a~#,3^, ~}" aseq) "a, quick, brown, fox, jumped, over"
+    (cl-format nil "~{~a~v,3^, ~}" lseq) "a, quick, brown, fox"
+    (cl-format nil "~{~a~3,v,4^, ~}" lseq) "a, quick, brown, fox"
+  ))
