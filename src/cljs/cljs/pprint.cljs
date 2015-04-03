@@ -2016,7 +2016,7 @@ http://www.lispworks.com/documentation/HyperSpec/Body/22_c.htm"
           (let [s (string/lower-case x)]
             (if (not @capped)
               (let [m (.exec (js/RegExp "\\S" "g") s)
-                    offset (and m (inc (.-index m)))]
+                    offset (and m (.-index m))]
                 (if offset
                   (do (-write writer
                               (str (subs s 0 offset)

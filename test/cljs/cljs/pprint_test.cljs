@@ -379,3 +379,21 @@
   (cl-format nil "~@{~&~A~2,6@T~:*~A~}" 'a 'aa 'aaa 'aaaa 'aaaaa 'aaaaaa 'aaaaaaa 'aaaaaaaa 'aaaaaaaaa 'aaaaaaaaaa)
   "a     a\naa    aa\naaa   aaa\naaaa  aaaa\naaaaa       aaaaa\naaaaaa      aaaaaa\naaaaaaa     aaaaaaa\naaaaaaaa    aaaaaaaa\naaaaaaaaa   aaaaaaaaa\naaaaaaaaaa  aaaaaaaaaa"
 )
+
+(simple-tests paren-tests
+  (cl-format nil "~(PLEASE SPEAK QUIETLY IN HERE~)") "please speak quietly in here"
+  (cl-format nil "~@(PLEASE SPEAK QUIETLY IN HERE~)") "Please speak quietly in here"
+  (cl-format nil "~@:(but this Is imporTant~)") "BUT THIS IS IMPORTANT"
+  (cl-format nil "~:(the greAt gatsby~)!") "The Great Gatsby!"
+  ;; Test cases from CLtL 18.3 - string-upcase, et al.
+  (cl-format nil "~@:(~A~)" "Dr. Livingstone, I presume?") "DR. LIVINGSTONE, I PRESUME?"
+  (cl-format nil "~(~A~)" "Dr. Livingstone, I presume?") "dr. livingstone, i presume?"
+  (cl-format nil "~:(~A~)" " hello ") " Hello "
+  (cl-format nil "~:(~A~)" "occlUDeD cASEmenTs FOreSTAll iNADVertent DEFenestraTION")
+  "Occluded Casements Forestall Inadvertent Defenestration"
+  (cl-format nil "~:(~A~)" 'kludgy-hash-search) "Kludgy-Hash-Search"
+  (cl-format nil "~:(~A~)" "DON'T!") "Don'T!"     ;not "Don't!"
+  (cl-format nil "~:(~A~)" "pipe 13a, foo16c") "Pipe 13a, Foo16c"
+  (cl-format nil "~:(~A~)" nil) "Nil"
+  (cl-format nil "~:(~A~)" "") ""
+)
