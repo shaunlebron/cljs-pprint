@@ -70,11 +70,53 @@
 ;;----------------------------------------------------------------------------
 
 (simple-tests d-tests
-              (cl-format nil "~D" 0) "0"
-              (cl-format nil "~D" 2e6) "2000000"
-              (cl-format nil "~D" 2000000) "2000000"
-              (cl-format nil "~:D" 2000000) "2,000,000"
-              ;(cl-format nil "~D" 1/2) "1/2" ;no ratio
-              (cl-format nil "~D" 'fred) "fred"
-              )
+  (cl-format nil "~D" 0) "0"
+  (cl-format nil "~D" 2e6) "2000000"
+  (cl-format nil "~D" 2000000) "2000000"
+  (cl-format nil "~:D" 2000000) "2,000,000"
+  ;(cl-format nil "~D" 1/2) "1/2" ;no ratio
+  (cl-format nil "~D" 'fred) "fred"
+)
 
+(simple-tests cardinal-tests
+  (cl-format nil "~R" 0) "zero"
+  (cl-format nil "~R" 4) "four"
+  (cl-format nil "~R" 15) "fifteen"
+  (cl-format nil "~R" -15) "minus fifteen"
+  (cl-format nil "~R" 25) "twenty-five"
+  (cl-format nil "~R" 20) "twenty"
+  (cl-format nil "~R" 200) "two hundred"
+  (cl-format nil "~R" 203) "two hundred three"
+
+  (cl-format nil "~R" 44879032)
+  "forty-four million, eight hundred seventy-nine thousand, thirty-two"
+
+  (cl-format nil "~R" -44879032)
+  "minus forty-four million, eight hundred seventy-nine thousand, thirty-two"
+
+  (cl-format nil "~R = ~:*~:D" 44000032)
+  "forty-four million, thirty-two = 44,000,032"
+
+  ;;js/Number.MAX_SAFE_INTEGER - js starts munging larger values
+  (cl-format nil "~R = ~:*~:D" 9007199254740991)
+  "nine quadrillion, seven trillion, one hundred ninety-nine billion, two hundred fifty-four million, seven hundred forty thousand, nine hundred ninety-one = 9,007,199,254,740,991"
+
+  ;;js/Number.MAX_SAFE_INTEGER - js starts munging smaller values
+  (cl-format nil "~R = ~:*~:D" -9007199254740991)
+  "minus nine quadrillion, seven trillion, one hundred ninety-nine billion, two hundred fifty-four million, seven hundred forty thousand, nine hundred ninety-one = -9,007,199,254,740,991"
+
+  ;;TODO Figure out what to do with larger numbers
+  #_(comment "These fail due to javascript's large number handling"
+  (cl-format nil "~R = ~:*~:D" 448790329480948209384389429384029384029842098420989842094)
+  "four hundred forty-eight septendecillion, seven hundred ninety sexdecillion, three hundred twenty-nine quindecillion, four hundred eighty quattuordecillion, nine hundred forty-eight tredecillion, two hundred nine duodecillion, three hundred eighty-four undecillion, three hundred eighty-nine decillion, four hundred twenty-nine nonillion, three hundred eighty-four octillion, twenty-nine septillion, three hundred eighty-four sextillion, twenty-nine quintillion, eight hundred forty-two quadrillion, ninety-eight trillion, four hundred twenty billion, nine hundred eighty-nine million, eight hundred forty-two thousand, ninety-four = 448,790,329,480,948,209,384,389,429,384,029,384,029,842,098,420,989,842,094"
+
+  (cl-format nil "~R = ~:*~:D" 448790329480948209384389429384029384029842098420989842094490320942058747587584758375847593475)
+  "448,790,329,480,948,209,384,389,429,384,029,384,029,842,098,420,989,842,094,490,320,942,058,747,587,584,758,375,847,593,475 = 448,790,329,480,948,209,384,389,429,384,029,384,029,842,098,420,989,842,094,490,320,942,058,747,587,584,758,375,847,593,475"
+  )
+
+  (cl-format nil "~R = ~:*~:D" 2e6)
+  "two million = 2,000,000"
+
+  (cl-format nil "~R = ~:*~:D" 200000200000)
+  "two hundred billion, two hundred thousand = 200,000,200,000"
+)
