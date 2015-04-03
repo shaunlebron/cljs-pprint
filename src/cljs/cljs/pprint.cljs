@@ -1416,7 +1416,7 @@ http://www.lispworks.com/documentation/HyperSpec/Body/22_c.htm"
         (neg? i) (apply str "1" (repeat (inc len-1) "0"))
         (= \9 (.charAt s i)) (recur (dec i))
         :else (apply str (subs s 0 i)
-                     (char (inc (int (.charAt s i))))
+                     (char (inc (char-code (.charAt s i))))
                      (repeat (- len-1 i) "0"))))))
 
 (defn- round-str [m e d w]
@@ -1424,10 +1424,11 @@ http://www.lispworks.com/documentation/HyperSpec/Body/22_c.htm"
     (let [len (count m)
           ;; Every formatted floating point number should include at
           ;; least one decimal digit and a decimal point.
-          ;; TODO: NB: This is a *bug* in the original code. w is used in
-          ;; calculations below but could potentially be nil. cljs gives
-          ;; compilation warnings.
-          w (if w (max 2 w))
+          w (if w (max 2 w)
+                  ;;NB: if w doesn't exist, it won't ever be used because d will
+                  ;; satisfy the cond below. cljs gives a compilation warning if
+                  ;; we don't provide a value here.
+                  0)
           round-pos (cond
                       ;; If d was given, that forces the rounding
                       ;; position, regardless of any width that may
@@ -1452,7 +1453,7 @@ http://www.lispworks.com/documentation/HyperSpec/Body/22_c.htm"
           (if (> len round-pos)
             (let [round-char (nth m1 round-pos)
                   result (subs m1 0 round-pos)]
-              (if (>= (int round-char) (int \5))
+              (if (>= (char-code round-char) (char-code \5))
                 (let [round-up-result (inc-s result)
                       expanded (> (count round-up-result) (count result))]
                   [(if expanded
