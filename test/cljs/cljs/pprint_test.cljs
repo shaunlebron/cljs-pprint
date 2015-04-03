@@ -161,3 +161,13 @@
   (cl-format nil "~:R = ~:*~:D" 2e6)
   "two millionth = 2,000,000"
 )
+
+(simple-tests ordinal1-tests
+  (cl-format nil "~:R" 1) "first"
+  (cl-format nil "~:R" 11) "eleventh"
+  (cl-format nil "~:R" 21) "twenty-first"
+  (cl-format nil "~:R" 20) "twentieth"
+  (cl-format nil "~:R" 220) "two hundred twentieth"
+  (cl-format nil "~:R" 200) "two hundredth"
+  (cl-format nil "~:R" 999) "nine hundred ninety-ninth"
+)
