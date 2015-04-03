@@ -1216,7 +1216,7 @@ http://www.lispworks.com/documentation/HyperSpec/Body/22_c.htm"
           (let [ten-digit (quot tens 10)
                 unit-digit (rem tens 10)]
             (if (and (pos? ten-digit) (not (pos? unit-digit)))
-              (nth english-ordinal-units ten-digit)
+              (nth english-ordinal-tens ten-digit)
               (str
                 (if (pos? ten-digit) (nth english-cardinal-tens ten-digit))
                 (if (and (pos? ten-digit) (pos? unit-digit)) "-")
