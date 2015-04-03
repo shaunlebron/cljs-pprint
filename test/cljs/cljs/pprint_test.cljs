@@ -1,7 +1,7 @@
 (ns cljs.pprint-test
   (:require
     [cemerick.cljs.test :as t]
-    [cljs.pprint :refer [pprint]])
+    [cljs.pprint :refer [pprint cl-format]])
   (:require-macros
     [cemerick.cljs.test :refer [deftest is]]
     [cljs.pprint-test :refer [simple-tests]]))
@@ -64,3 +64,17 @@
     (with-out-str (pprint (sorted-set 123 456 789))))
   "#{123\n  456\n  789}\n"
 )
+
+;;----------------------------------------------------------------------------
+;; clj-format tests
+;;----------------------------------------------------------------------------
+
+(simple-tests d-tests
+              (cl-format nil "~D" 0) "0"
+              (cl-format nil "~D" 2e6) "2000000"
+              (cl-format nil "~D" 2000000) "2000000"
+              (cl-format nil "~:D" 2000000) "2,000,000"
+              ;(cl-format nil "~D" 1/2) "1/2" ;no ratio
+              (cl-format nil "~D" 'fred) "fred"
+              )
+

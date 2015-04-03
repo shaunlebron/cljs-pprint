@@ -49,6 +49,10 @@
        (not (identical? n js/Infinity))
        (not (== (js/parseFloat n) (js/parseInt n 10)))))
 
+(defn char-code
+  [c]
+  (.charCodeAt c 0))
+
 ;;======================================================================
 ;; Utilities
 ;;======================================================================
@@ -1042,7 +1046,7 @@ http://www.lispworks.com/documentation/HyperSpec/Body/22_c.htm"
   (reverse
     (first
       (consume #(if (pos? %)
-                 [(rem % base) (quote %) base]
+                 [(rem % base) (quot % base)]
                  [nil nil])
                val))))
 
@@ -1059,7 +1063,7 @@ http://www.lispworks.com/documentation/HyperSpec/Body/22_c.htm"
                        :else val)]
       (apply str
              (map
-               #(if (< % 10) (char (+ (int \0) %)) (char (+ (int \a) (- % 10))))
+               #(if (< % 10) (char (+ (char-code \0) %)) (char (+ (char-code \a) (- % 10))))
                (remainders base val))))))
 
 ;;Not sure if this is accurate or necessary
@@ -2682,10 +2686,9 @@ column number or pretty printing"
   {:skip-wiki true}
   ([stream format args]
    (let [sb (StringBuffer.)
-         real-stream (cond
-                       (not stream) (StringBufferWriter. sb)
-                       (true? stream) *out*
-                       :else stream)
+         real-stream (if (or (not stream) (true? stream))
+                       (StringBufferWriter. sb)
+                       stream)
          wrapped-stream (if (and (needs-pretty format)
                                  (not (pretty-writer? real-stream)))
                           (get-pretty-writer real-stream)
@@ -2696,7 +2699,10 @@ column number or pretty printing"
          (finally
            (if-not (identical? real-stream wrapped-stream)
              (-flush wrapped-stream))))
-       (if (not stream) (str sb)))))
+       (cond
+         (not stream) (str sb)
+         (true? stream) (*print-fn* (str sb))
+         :default nil))))
   ([format args]
    (map-passing-context
      (fn [element context]
