@@ -171,3 +171,21 @@
   (cl-format nil "~:R" 200) "two hundredth"
   (cl-format nil "~:R" 999) "nine hundred ninety-ninth"
 )
+
+(simple-tests roman-tests
+  (cl-format nil "~@R" 3) "III"
+  (cl-format nil "~@R" 4) "IV"
+  (cl-format nil "~@R" 9) "IX"
+  (cl-format nil "~@R" 29) "XXIX"
+  (cl-format nil "~@R" 429) "CDXXIX"
+  (cl-format nil "~@:R" 429) "CCCCXXVIIII"
+  (cl-format nil "~@:R" 3429) "MMMCCCCXXVIIII"
+  (cl-format nil "~@R" 3429) "MMMCDXXIX"
+  (cl-format nil "~@R" 3479) "MMMCDLXXIX"
+  (cl-format nil "~@R" 3409) "MMMCDIX"
+  (cl-format nil "~@R" 300) "CCC"
+  (cl-format nil "~@R ~D" 300 20) "CCC 20"
+  (cl-format nil "~@R" 5000) "5,000"
+  (cl-format nil "~@R ~D" 5000 20) "5,000 20"
+  (cl-format nil "~@R" "the quick") "the quick"
+)
