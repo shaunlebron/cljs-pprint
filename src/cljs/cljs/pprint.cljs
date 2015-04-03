@@ -30,6 +30,17 @@
   (apply print more)
   (-write *out* \newline))
 
+(defn- print-char [c]
+  (-write *out* (condp = c
+                  \backspace "\\backspace"
+                  \tab "\\tab"
+                  \newline "\\newline"
+                  \formfeed "\\formfeed"
+                  \return "\\return"
+                  \" "\\\""
+                  \\ "\\\\"
+                  (str "\\" c))))
+
 (defn- ^:dynamic pr [& more]
   (-write *out* (apply pr-str more)))
 
@@ -50,8 +61,12 @@
        (not (== (js/parseFloat n) (js/parseInt n 10)))))
 
 (defn char-code
+  "Convert char to int"
   [c]
-  (.charCodeAt c 0))
+  (cond
+    (number? c) c
+    (and (string? c) (== (.-length c) 1)) (.charCodeAt c 0)
+    :else (throw (js/Error. "Argument to char must be a character or number"))))
 
 ;;======================================================================
 ;; Utilities
@@ -471,7 +486,7 @@ beginning of aseq"
       (let [oldpos (getf :pos)
             newpos (inc oldpos)]
         (setf :pos newpos)
-        (add-to-buffer this (make-buffer-blob (str (char c)) nil oldpos newpos))))))
+        (add-to-buffer this (make-buffer-blob (char c) nil oldpos newpos))))))
 
 ;;======================================================================
 ;; Initialize the pretty-writer instance
@@ -1312,7 +1327,7 @@ http://www.lispworks.com/documentation/HyperSpec/Body/22_c.htm"
 
 (defn- pretty-character [params navigator offsets]
   (let [[c navigator] (next-arg navigator)
-        as-int (int c)
+        as-int (char-code c)
         base-char (bit-and as-int 127)
         meta (bit-and as-int 128)
         special (get special-chars base-char)]
@@ -1327,9 +1342,9 @@ http://www.lispworks.com/documentation/HyperSpec/Body/22_c.htm"
 (defn- readable-character [params navigator offsets]
   (let [[c navigator] (next-arg navigator)]
     (condp = (:char-format params)
-      \o (cl-format true "\\o~3, '0o" (int c))
-      \u (cl-format true "\\u~4, '0x" (int c))
-      nil (pr c))
+      \o (cl-format true "\\o~3, '0o" (char-code c))
+      \u (cl-format true "\\u~4, '0x" (char-code c))
+      nil (print-char c))
     navigator))
 
 (defn- plain-character [params navigator offsets]

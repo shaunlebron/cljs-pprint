@@ -189,3 +189,21 @@
   (cl-format nil "~@R ~D" 5000 20) "5,000 20"
   (cl-format nil "~@R" "the quick") "the quick"
 )
+
+(simple-tests c-tests
+  (cl-format nil "~{~c~^, ~}~%" "hello") "h, e, l, l, o\n"
+  (cl-format nil "~{~:c~^, ~}~%" "hello") "h, e, l, l, o\n"
+  (cl-format nil "~@C~%" \m) "\\m\n"
+  (cl-format nil "~@C~%" (char 222)) "\\Þ\n"
+
+  ;;chars that are specially printed in cljs
+  (cl-format nil "~@C~%" (char 8)) "\\backspace\n"
+  (cl-format nil "~@C~%" (char 9)) "\\tab\n"
+  (cl-format nil "~@C~%" (char 10)) "\\newline\n"
+  (cl-format nil "~@C~%" (char 12)) "\\formfeed\n"
+  (cl-format nil "~@C~%" (char 13)) "\\return\n"
+  (cl-format nil "~@C~%" (char 34)) "\\\"\n"
+  (cl-format nil "~@C~%" (char 92)) "\\\\\n"
+
+  (cl-format nil "~@C~%" (char 3)) "\\\n"
+)
