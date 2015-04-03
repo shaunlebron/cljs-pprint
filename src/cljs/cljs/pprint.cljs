@@ -2447,7 +2447,7 @@ not a pretty writer (which keeps track of columns), this function always outputs
   (let [m (js/RegExp. (.-source param-pattern) "g")
         param (.exec m s)]
     (if param
-      (let [token-str (ffirst param)
+      (let [token-str (first param)
             remainder (subs s (.-lastIndex m))
             new-offset (+ offset (.-lastIndex m))]
         (if (not (= \, (nth remainder 0)))

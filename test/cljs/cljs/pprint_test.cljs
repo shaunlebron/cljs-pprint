@@ -207,3 +207,16 @@
 
   (cl-format nil "~@C~%" (char 3)) "\\\n"
 )
+
+(simple-tests e-tests
+  (cl-format nil "*~E*" 0.0) "*0.0E+0*"
+  (cl-format nil "*~6E*" 0.0) "*0.0E+0*"
+  (cl-format nil "*~6,0E*" 0.0) "* 0.E+0*"
+  (cl-format nil "*~7,2E*" 0.0) "*0.00E+0*"
+  (cl-format nil "*~5E*" 0.0) "*0.E+0*"
+  (cl-format nil "*~10,2,2,,'?E*" 2.8E120) "*??????????*"
+  (cl-format nil "*~10,2E*" 9.99999) "*   1.00E+1*"
+  (cl-format nil "*~10,2E*" 9.99999E99) "* 1.00E+100*"
+  (cl-format nil "*~10,2,2E*" 9.99999E99) "* 1.00E+100*"
+  (cl-format nil "*~10,2,2,,'?E*" 9.99999E99) "*??????????*"
+)
