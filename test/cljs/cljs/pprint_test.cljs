@@ -576,3 +576,26 @@
     (cl-format nil "~{~a~v,3^, ~}" lseq) "a, quick, brown, fox"
     (cl-format nil "~{~a~3,v,4^, ~}" lseq) "a, quick, brown, fox"
   ))
+
+(simple-tests angle-bracket-tests
+  (cl-format nil "~<foo~;bar~;baz~>") "foobarbaz"
+  (cl-format nil "~20<foo~;bar~;baz~>") "foo      bar     baz"
+  (cl-format nil "~,,2<foo~;bar~;baz~>") "foo  bar  baz"
+  (cl-format nil "~20<~A~;~A~;~A~>" "foo" "bar" "baz") "foo      bar     baz"
+  (cl-format nil "~20:<~A~;~A~;~A~>" "foo" "bar" "baz") "    foo    bar   baz"
+  (cl-format nil "~20@<~A~;~A~;~A~>" "foo" "bar" "baz") "foo    bar    baz   "
+  (cl-format nil "~20@:<~A~;~A~;~A~>" "foo" "bar" "baz") "   foo   bar   baz  "
+  (cl-format nil "~10,,2<~A~;~A~;~A~>" "foo" "bar" "baz") "foo  bar  baz"
+  (cl-format nil "~10,10,2<~A~;~A~;~A~>" "foo" "bar" "baz") "foo      bar     baz"
+  (cl-format nil "~10,10<~A~;~A~;~A~>" "foo" "bar" "baz") "foo barbaz"
+  (cl-format nil "~20<~A~;~^~A~;~^~A~>" "foo" "bar" "baz") "foo      bar     baz"
+  (cl-format nil "~20<~A~;~^~A~;~^~A~>" "foo" "bar") "foo              bar"
+  (cl-format nil "~20@<~A~;~^~A~;~^~A~>" "foo") "foo                 "
+  (cl-format nil "~20:<~A~;~^~A~;~^~A~>" "foo") "                 foo"
+)
+
+(simple-tests angle-bracket-max-column-tests
+  (cl-format nil "~%;; ~{~<~%;; ~1,50:; ~A~>~}.~%" (into [] (clojure.string/split "This function computes the circular thermodynamic coefficient of the thrombulator angle for use in determining the reaction distance" #"\s")))
+  "\n;;  This function computes the circular\n;;  thermodynamic coefficient of the thrombulator\n;;  angle for use in determining the reaction\n;;  distance.\n"
+  (cl-format true "~%;; ~{~<~%;; ~:; ~A~>~}.~%" (into [] (clojure.string/split "This function computes the circular thermodynamic coefficient of the thrombulator angle for use in determining the reaction distance." #"\s")))
+)
