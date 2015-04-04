@@ -663,9 +663,38 @@
   ;; This one was a nice idea, but nothing in the spec supports it working this way
   ;; (and SBCL doesn't work this way either)
   ;(format nil "~19,,' ,4:B" 0x1CE) "0000 0001 1100 1110")
-  )
+)
 
 (simple-tests cltl-P-tests
   (format nil "~D tr~:@P/~D win~:P" 7 1) "7 tries/1 win"
   (format nil "~D tr~:@P/~D win~:P" 1 0) "1 try/0 wins"
-  (format nil "~D tr~:@P/~D win~:P" 1 3) "1 try/3 wins")
+  (format nil "~D tr~:@P/~D win~:P" 1 3) "1 try/3 wins"
+)
+
+(defn foo [x]
+  (format nil "~6,2F|~6,2,1,'*F|~6,2,,'?F|~6F|~,2F|~F"
+          x x x x x x))
+
+(simple-tests cltl-F-tests
+  #_(cl-format false "~10,3f" 4/5)
+  #_"     0.800"
+  #_(binding [*math-context* java.math.MathContext/DECIMAL128]
+    (cl-format false "~10,3f" big-pos-ratio))
+  #_"239692417981642093333333333333333300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000.000"
+  #_(binding [*math-context* java.math.MathContext/DECIMAL128]
+    (cl-format false "~10,3f" big-neg-ratio))
+  #_"-239692417981642093333333333333333300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000.000"
+  #_(binding [*math-context* java.math.MathContext/DECIMAL128]
+    (cl-format false "~10,3f" tiny-pos-ratio))
+  #_"     0.000"
+  #_(binding [*math-context* java.math.MathContext/DECIMAL128]
+    (cl-format false "~10,3f" tiny-neg-ratio))
+  #_"    -0.000"
+  (foo 3.14159)  "  3.14| 31.42|  3.14|3.1416|3.14|3.14159"
+  #_(foo 314159/100000)
+  #_"  3.14| 31.42|  3.14|3.1416|3.14|3.14159"
+  (foo -3.14159) " -3.14|-31.42| -3.14|-3.142|-3.14|-3.14159"
+  (foo 100.0)    "100.00|******|100.00| 100.0|100.00|100.0"
+  (foo 1234.0)   "1234.00|******|??????|1234.0|1234.00|1234.0"
+  (foo 0.006)    "  0.01|  0.06|  0.01| 0.006|0.01|0.006"
+)
