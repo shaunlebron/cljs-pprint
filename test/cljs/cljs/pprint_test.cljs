@@ -1,10 +1,12 @@
 (ns cljs.pprint-test
+  #_(:refer-clojure :exclude [prn])
   (:require
     [cemerick.cljs.test :as t]
-    [cljs.pprint :refer [pprint cl-format]])
+    [cljs.pprint :refer [pprint cl-format *out* get-pretty-writer prn]])
   (:require-macros
     [cemerick.cljs.test :refer [deftest is]]
-    [cljs.pprint-test :refer [simple-tests]]))
+    [cljs.pprint-test :refer [simple-tests]])
+  (:import goog.string.StringBuffer))
 
 (simple-tests print-length-tests
   (binding [*print-length* 1] (with-out-str (pprint '(a b c d e f))))
@@ -598,4 +600,33 @@
   (cl-format nil "~%;; ~{~<~%;; ~1,50:; ~A~>~}.~%" (into [] (clojure.string/split "This function computes the circular thermodynamic coefficient of the thrombulator angle for use in determining the reaction distance" #"\s")))
   "\n;;  This function computes the circular\n;;  thermodynamic coefficient of the thrombulator\n;;  angle for use in determining the reaction\n;;  distance.\n"
   (cl-format true "~%;; ~{~<~%;; ~:; ~A~>~}.~%" (into [] (clojure.string/split "This function computes the circular thermodynamic coefficient of the thrombulator angle for use in determining the reaction distance." #"\s")))
+)
+
+(defn list-to-table-stream [aseq column-width]
+  (let [sb (StringBuffer.)]
+    (binding [*out* (get-pretty-writer (StringBufferWriter. sb))]
+      (doseq [row aseq]
+        (doseq [col row]
+          (cl-format *out* "~4D~7,vT" col column-width))
+        (prn)))
+    (str sb)
+    ;;TODO do we need to extend StringBufferWriter to allow access to underlying StringBuffer?
+    #_(str (:base @@(:base @@stream)))))
+
+(defn list-to-table-print [aseq column-width]
+  (let [sb (StringBuffer.)]
+    (binding [*print-fn* (fn [s] (.append sb (apply str s)))
+              *print-newline* true]
+      (doseq [row aseq]
+        (doseq [col row]
+          (cl-format true "~4D~7,vT" col column-width))
+        (cljs.core/prn)))
+    (str sb)))
+
+(simple-tests column-writer-test
+  (list-to-table-stream (map #(vector % (* % %) (* % % %)) (range 1 21)) 8)
+  "   1      1       1    \n   2      4       8    \n   3      9      27    \n   4     16      64    \n   5     25     125    \n   6     36     216    \n   7     49     343    \n   8     64     512    \n   9     81     729    \n  10    100    1000    \n  11    121    1331    \n  12    144    1728    \n  13    169    2197    \n  14    196    2744    \n  15    225    3375    \n  16    256    4096    \n  17    289    4913    \n  18    324    5832    \n  19    361    6859    \n  20    400    8000    \n"
+
+  (list-to-table-print (map #(vector % (* % %) (* % % %)) (range 1 21)) 8)
+  "   1      1      1   \n   2      4      8   \n   3      9     27   \n   4     16     64   \n   5     25    125   \n   6     36    216   \n   7     49    343   \n   8     64    512   \n   9     81    729   \n  10    100   1000   \n  11    121   1331   \n  12    144   1728   \n  13    169   2197   \n  14    196   2744   \n  15    225   3375   \n  16    256   4096   \n  17    289   4913   \n  18    324   5832   \n  19    361   6859   \n  20    400   8000   \n"
 )

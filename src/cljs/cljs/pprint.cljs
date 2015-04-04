@@ -2697,6 +2697,18 @@ column number or pretty printing"
         true
         (recur (next format))))))
 
+;;NB We depart from the original api. In clj, if execute-format is called multiple times with the same stream or
+;; called on *out*, the results are different than if the same calls are made with different streams or printing
+;; to a string. The reason is that mutating the underlying stream changes the result by changing spacing.
+;;
+;; clj:
+;;  * stream                       => "1 2  3"
+;;  * true (prints to *out*)       => "1 2  3"
+;;  * nil (prints to string)       => "1 2 3"
+;; cljs:
+;;  * stream                       => "1 2  3"
+;;  * true (prints via *print-fn*) => "1 2 3"
+;;  * nil (prints to string)       => "1 2 3"
 (defn- execute-format
   "Executes the format with the arguments."
   {:skip-wiki true}
@@ -2718,7 +2730,7 @@ column number or pretty printing"
        (cond
          (not stream) (str sb)
          (true? stream) (*print-fn* (str sb))
-         :default nil))))
+         :else nil))))
   ([format args]
    (map-passing-context
      (fn [element context]
