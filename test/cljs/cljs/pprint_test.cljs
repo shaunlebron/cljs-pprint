@@ -675,6 +675,15 @@
   (format nil "~6,2F|~6,2,1,'*F|~6,2,,'?F|~6F|~,2F|~F"
           x x x x x x))
 
+;; big-pos-ratio is a ratio value that is larger than
+;; Double/MAX_VALUE, and has a non-terminating decimal representation
+;; if you attempt to represent it exactly.
+#_(def big-pos-ratio (/ (* 4 (bigint (. BigDecimal valueOf Double/MAX_VALUE))) 3))
+#_(def big-neg-ratio (- big-pos-ratio))
+;; tiny-pos-ratio is a ratio between 0 and Double/MIN_VALUE.
+#_(def tiny-pos-ratio (/ 1 (bigint (apply str (cons "1" (repeat 340 "0"))))))
+#_(def tiny-neg-ratio (- tiny-pos-ratio))
+
 (simple-tests cltl-F-tests
   #_(cl-format false "~10,3f" 4/5)
   #_"     0.800"
@@ -697,4 +706,39 @@
   (foo 100.0)    "100.00|******|100.00| 100.0|100.00|100.0"
   (foo 1234.0)   "1234.00|******|??????|1234.0|1234.00|1234.0"
   (foo 0.006)    "  0.01|  0.06|  0.01| 0.006|0.01|0.006"
+)
+
+(defn foo-e [x]
+  (format nil
+          "~9,2,1,,'*E|~10,3,2,2,'?,,'$E|~9,3,2,-2,'%@E|~9,2E"
+          x x x x))
+
+;; Clojure doesn't support float/double differences in representation
+(simple-tests cltl-E-tests
+  #_(cl-format false "~10,3e" 4/5)
+  #_"  8.000E-1"
+  #_(binding [*math-context* java.math.MathContext/DECIMAL128]
+    (cl-format false "~10,3e" big-pos-ratio))
+  #_"2.397E+308"
+  #_(binding [*math-context* java.math.MathContext/DECIMAL128]
+    (cl-format false "~10,3e" big-neg-ratio))
+  #_"-2.397E+308"
+  #_(binding [*math-context* java.math.MathContext/DECIMAL128]
+    (cl-format false "~10,3e" tiny-pos-ratio))
+  #_"1.000E-340"
+  #_(binding [*math-context* java.math.MathContext/DECIMAL128]
+    (cl-format false "~10,3e" tiny-neg-ratio))
+  #_"-1.000E-340"
+  (foo-e 0.0314159) "  3.14E-2| 31.42$-03|+.003E+01|  3.14E-2"  ; Added this one
+  #_(foo-e 314159/10000000)
+  #_"  3.14E-2| 31.42$-03|+.003E+01|  3.14E-2"
+  (foo-e 3.14159)  "  3.14E+0| 31.42$-01|+.003E+03|  3.14E+0"
+  (foo-e -3.14159) " -3.14E+0|-31.42$-01|-.003E+03| -3.14E+0"
+  (foo-e 1100.0)   "  1.10E+3| 11.00$+02|+.001E+06|  1.10E+3"
+  ; In Clojure, this is identical to the above
+  ;  (foo-e 1100.0L0) "  1.10L+3| 11.00$+02|+.001L+06|  1.10L+3"
+  (foo-e 1.1E13)   "*********| 11.00$+12|+.001E+16| 1.10E+13"
+  (foo-e 1.1E120)  "*********|??????????|%%%%%%%%%|1.10E+120"
+  ; Clojure doesn't support real numbers this large
+  ;  (foo-e 1.1L1200) "*********|??????????|%%%%%%%%%|1.10L+1200"
 )
