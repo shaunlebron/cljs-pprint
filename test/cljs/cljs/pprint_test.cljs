@@ -8,6 +8,8 @@
     [cljs.pprint-test :refer [simple-tests]])
   (:import goog.string.StringBuffer))
 
+(def format cl-format)
+
 (simple-tests print-length-tests
   (binding [*print-length* 1] (with-out-str (pprint '(a b c d e f))))
   "(a ...)\n"
@@ -630,3 +632,40 @@
   (list-to-table-print (map #(vector % (* % %) (* % % %)) (range 1 21)) 8)
   "   1      1      1   \n   2      4      8   \n   3      9     27   \n   4     16     64   \n   5     25    125   \n   6     36    216   \n   7     49    343   \n   8     64    512   \n   9     81    729   \n  10    100   1000   \n  11    121   1331   \n  12    144   1728   \n  13    169   2197   \n  14    196   2744   \n  15    225   3375   \n  16    256   4096   \n  17    289   4913   \n  18    324   5832   \n  19    361   6859   \n  20    400   8000   \n"
 )
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; The following tests are the various examples from the format
+;; documentation in Common Lisp, the Language, 2nd edition, Chapter 22.3
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn expt [base pow] (reduce * (repeat pow base)))
+
+(let [x 5, y "elephant", n 3]
+  (simple-tests cltl-intro-tests
+    (format nil "foo")  "foo"
+    (format nil "The answer is ~D." x)  "The answer is 5."
+    (format nil "The answer is ~3D." x)  "The answer is   5."
+    (format nil "The answer is ~3,'0D." x)  "The answer is 005."
+    (format nil "The answer is ~:D." (expt 47 x)) "The answer is 229,345,007."
+    (format nil "Look at the ~A!" y)  "Look at the elephant!"
+    (format nil "Type ~:C to ~A." (char 4) "delete all your files")
+    "Type Control-D to delete all your files."
+    (format nil "~D item~:P found." n)  "3 items found."
+    (format nil "~R dog~:[s are~; is~] here." n (= n 1)) "three dogs are here."
+    (format nil "~R dog~:*~[s are~; is~:;s are~] here." n) "three dogs are here."
+    (format nil "Here ~[are~;is~:;are~] ~:*~R pupp~:@P." n) "Here are three puppies."))
+
+(simple-tests cltl-B-tests
+  ;; CLtL didn't have the colons here, but the spec requires them
+  (format nil "~,,' ,4:B" 0xFACE) "1111 1010 1100 1110"
+  (format nil "~,,' ,4:B" 0x1CE) "1 1100 1110"
+  (format nil "~19,,' ,4:B" 0xFACE) "1111 1010 1100 1110"
+  ;; This one was a nice idea, but nothing in the spec supports it working this way
+  ;; (and SBCL doesn't work this way either)
+  ;(format nil "~19,,' ,4:B" 0x1CE) "0000 0001 1100 1110")
+  )
+
+(simple-tests cltl-P-tests
+  (format nil "~D tr~:@P/~D win~:P" 7 1) "7 tries/1 win"
+  (format nil "~D tr~:@P/~D win~:P" 1 0) "1 try/0 wins"
+  (format nil "~D tr~:@P/~D win~:P" 1 3) "1 try/3 wins")
