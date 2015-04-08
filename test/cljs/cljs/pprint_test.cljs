@@ -2,7 +2,7 @@
   #_(:refer-clojure :exclude [prn])
   (:require
     [cemerick.cljs.test :as t]
-    [cljs.pprint :refer [pprint cl-format *out* get-pretty-writer prn]])
+    [cljs.pprint :refer [pprint cl-format *out* get-pretty-writer prn print-table]])
   (:require-macros
     [cemerick.cljs.test :refer [deftest is]]
     [cljs.pprint-test :refer [simple-tests]])
@@ -874,3 +874,63 @@
   (format nil "~10@<foobar~>")            "foobar    "
   (format nil "~10:@<foobar~>")           "  foobar  "
 )
+
+(let [donestr "Done.~^  ~D warning~:P.~^  ~D error~:P."
+      tellstr "~@{~@(~@[~R~^ ~]~A~)~}."] ;; The CLtL example is a little wrong here
+
+  (simple-tests cltl-up-tests
+    (format nil donestr) "Done."
+    (format nil donestr 3) "Done.  3 warnings."
+    (format nil donestr 1 5) "Done.  1 warning.  5 errors."
+    (format nil tellstr 23) "Twenty-three."
+    (format nil tellstr nil "losers") "Losers."
+    (format nil tellstr 23 "losers") "Twenty-three losers."
+    (format nil "~15<~S~;~^~S~;~^~S~>" 'foo)
+    "            foo"
+    (format nil "~15<~S~;~^~S~;~^~S~>" 'foo 'bar)
+    "foo         bar"
+    (format nil "~15<~S~;~^~S~;~^~S~>" 'foo 'bar 'baz)
+    "foo   bar   baz"
+  ))
+
+(simple-tests cltl-up-x3j13-tests
+  (format nil
+          "~:{/~S~^ ...~}"
+          '((hot dog) (hamburger) (ice cream) (french fries)))
+  "/hot .../hamburger/ice .../french ..."
+  (format nil
+          "~:{/~S~:^ ...~}"
+          '((hot dog) (hamburger) (ice cream) (french fries)))
+  "/hot .../hamburger .../ice .../french"
+
+  (format nil
+          "~:{/~S~#:^ ...~}"  ;; This is wrong in CLtL
+          '((hot dog) (hamburger) (ice cream) (french fries)))
+  "/hot .../hamburger"
+)
+
+(simple-tests pprint-table-tests
+  (with-out-str
+    (print-table [:b :a]
+                 [{:a 1 :b {:a 'is-a} :c ["hi" "there"]}
+                  {:b 5 :a 7 :c "dog" :d -700}]))
+  "
+|        :b | :a |
+|-----------+----|
+| {:a is-a} |  1 |
+|         5 |  7 |
+"
+  ;;This test is changed a bit due to the way JS prints large numbers. The number
+  ;; was changed (54.7e17 to 54.7e20) to make sure JS prints it in E notation (5.47E21)
+  (with-out-str
+    (print-table [:a :e :d :c]
+                 [{:a 54.7e20 :b {:a 'is-a} :c ["hi" "there"]}
+                  {:b 5 :a -23 :c "dog" :d 'panda}]))
+  "
+|       :a | :e |    :d |             :c |
+|----------+----+-------+----------------|
+| 5.47e+21 |    |       | [\"hi\" \"there\"] |
+|      -23 |    | panda |            dog |
+"
+  )
+

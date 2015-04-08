@@ -2836,3 +2836,32 @@ column number or pretty printing"
 ;; print_table.clj
 ;;======================================================================
 
+(defn- add-padding [width s]
+  (let [padding (max 0 (- width (count s)))]
+    (apply str (clojure.string/join (repeat padding \space)) s)))
+
+(defn print-table
+  "Prints a collection of maps in a textual table. Prints table headings
+   ks, and then a line of output for each row, corresponding to the keys
+   in ks. If ks are not specified, use the keys of the first item in rows."
+  {:added "1.3"}
+  ([ks rows]
+   (binding [*print-newline*]
+     (when (seq rows)
+       (let [widths (map
+                      (fn [k]
+                        (apply max (count (str k)) (map #(count (str (get % k))) rows)))
+                      ks)
+             spacers (map #(apply str (repeat % "-")) widths)
+             fmt-row (fn [leader divider trailer row]
+                       (str leader
+                            (apply str (interpose divider
+                                                  (for [[col width] (map vector (map #(get row %) ks) widths)]
+                                                    (add-padding width (str col)))))
+                            trailer))]
+         (cljs.core/println)
+         (cljs.core/println (fmt-row "| " " | " " |" (zipmap ks ks)))
+         (cljs.core/println (fmt-row "|-" "-+-" "-|" (zipmap ks spacers)))
+         (doseq [row rows]
+           (cljs.core/println (fmt-row "| " " | " " |" row)))))))
+  ([rows] (print-table (keys (first rows)) rows)))

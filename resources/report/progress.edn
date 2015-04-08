@@ -200,4 +200,5 @@
  "formatter-out"          :same-name
  "table-ize"              :same-name
  "write-option-table"     :same-name
+ "print-table"            :same-name
  }
