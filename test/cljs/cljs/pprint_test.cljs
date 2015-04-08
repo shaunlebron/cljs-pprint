@@ -742,3 +742,58 @@
   ; Clojure doesn't support real numbers this large
   ;  (foo-e 1.1L1200) "*********|??????????|%%%%%%%%%|1.10L+1200"
 )
+
+(simple-tests cltl-E-scale-tests
+  (map
+    (fn [k] (format nil "Scale factor ~2D~:*: |~13,6,2,VE|"
+                    (- k 5) 3.14159))              ;Prints 13 lines
+    (range 13))
+  '("Scale factor -5: | 0.000003E+06|"
+     "Scale factor -4: | 0.000031E+05|"
+     "Scale factor -3: | 0.000314E+04|"
+     "Scale factor -2: | 0.003142E+03|"
+     "Scale factor -1: | 0.031416E+02|"
+     "Scale factor  0: | 0.314159E+01|"
+     "Scale factor  1: | 3.141590E+00|"
+     "Scale factor  2: | 31.41590E-01|"
+     "Scale factor  3: | 314.1590E-02|"
+     "Scale factor  4: | 3141.590E-03|"
+     "Scale factor  5: | 31415.90E-04|"
+     "Scale factor  6: | 314159.0E-05|"
+     "Scale factor  7: | 3141590.E-06|"))
+
+(defn foo-g [x]
+  (format nil
+          "~9,2,1,,'*G|~9,3,2,3,'?,,'$G|~9,3,2,0,'%G|~9,2G"
+          x x x x))
+
+;; Clojure doesn't support float/double differences in representation
+(simple-tests cltl-G-tests
+  #_(cl-format false "~10,3g" 4/5)
+  #_" 0.800    "
+  #_(binding [*math-context* java.math.MathContext/DECIMAL128]
+    (cl-format false "~10,3g" big-pos-ratio))
+  #_"2.397E+308"
+  #_(binding [*math-context* java.math.MathContext/DECIMAL128]
+    (cl-format false "~10,3g" big-neg-ratio))
+  #_"-2.397E+308"
+  #_(binding [*math-context* java.math.MathContext/DECIMAL128]
+    (cl-format false "~10,3g" tiny-pos-ratio))
+  #_"1.000E-340"
+  #_(binding [*math-context* java.math.MathContext/DECIMAL128]
+    (cl-format false "~10,3g" tiny-neg-ratio))
+  #_"-1.000E-340"
+  (foo-g 0.0314159) "  3.14E-2|314.2$-04|0.314E-01|  3.14E-2"
+  #_(foo-g 314159/10000000)
+  #_"  3.14E-2|314.2$-04|0.314E-01|  3.14E-2"
+  (foo-g 0.314159) "  0.31   |0.314    |0.314    | 0.31    "
+  (foo-g 3.14159) "   3.1   | 3.14    | 3.14    |  3.1    "
+  (foo-g 31.4159) "   31.   | 31.4    | 31.4    |  31.    "
+  (foo-g 314.159) "  3.14E+2| 314.    | 314.    |  3.14E+2"
+  (foo-g 3141.59) "  3.14E+3|314.2$+01|0.314E+04|  3.14E+3"
+  ; In Clojure, this is identical to the above
+  ;  (foo-g 3141.59L0) "  3.14L+3|314.2$+01|0.314L+04|  3.14L+3"
+  (foo-g 3.14E12) "*********|314.0$+10|0.314E+13| 3.14E+12"
+  (foo-g 3.14E120) "*********|?????????|%%%%%%%%%|3.14E+120"
+  ; Clojure doesn't support real numbers this large
+)

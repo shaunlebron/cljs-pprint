@@ -1629,7 +1629,7 @@ http://www.lispworks.com/documentation/HyperSpec/Body/22_c.htm"
         e (:e params)
         n (if (= arg 0.0) 0 (inc exp))
         ee (if e (+ e 2) 4)
-        ww (if w (= w ee))
+        ww (if w (- w ee))
         d (if d d (max (count mantissa) (min n 7)))
         dd (- d n)]
     (if (<= 0 dd d)
