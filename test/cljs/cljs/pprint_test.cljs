@@ -1,14 +1,60 @@
 (ns cljs.pprint-test
-  #_(:refer-clojure :exclude [prn])
+  (:refer-clojure :exclude [prn])
   (:require
     [cemerick.cljs.test :as t]
-    [cljs.pprint :refer [pprint cl-format *out* get-pretty-writer prn print-table]])
+    [cljs.pprint :refer [pprint cl-format *out* get-pretty-writer prn print-table
+                         *print-pprint-dispatch* simple-dispatch
+                         *print-right-margin* *print-miser-width*]])
   (:require-macros
     [cemerick.cljs.test :refer [deftest is]]
     [cljs.pprint-test :refer [simple-tests]])
   (:import goog.string.StringBuffer))
 
 (def format cl-format)
+
+(simple-tests xp-fill-test
+  (binding [*print-pprint-dispatch* simple-dispatch
+            *print-right-margin* 38
+            *print-miser-width* nil]
+    (cl-format nil "(let ~:<~@{~:<~w ~_~w~:>~^ ~:_~}~:>~_ ...)~%"
+               '((x 4) (*print-length* nil) (z 2) (list nil))))
+  "(let ((x 4) (*print-length* nil)\n      (z 2) (list nil))\n ...)\n"
+
+  (binding [*print-pprint-dispatch* simple-dispatch
+            *print-right-margin* 22]
+    (cl-format nil "(let ~:<~@{~:<~w ~_~w~:>~^ ~:_~}~:>~_ ...)~%"
+               '((x 4) (*print-length* nil) (z 2) (list nil))))
+  "(let ((x 4)\n      (*print-length*\n       nil)\n      (z 2)\n      (list nil))\n ...)\n"
+)
+
+(simple-tests mandatory-fill-test
+  (cl-format nil
+             "<pre>~%~<Usage: ~:I~@{*~a*~^~:@_~}~:>~%</pre>~%"
+             [ "hello" "gooodbye" ])
+  "<pre>
+Usage: *hello*
+       *gooodbye*
+</pre>
+")
+
+(simple-tests prefix-suffix-test
+  (binding [*print-pprint-dispatch* simple-dispatch
+            *print-right-margin* 10, *print-miser-width* 10]
+    (cl-format nil "~<{~;LIST ~@_~W ~@_~W ~@_~W~;}~:>" '(first second third)))
+  "{LIST\n first\n second\n third}"
+)
+
+(simple-tests xp-miser-test
+  (binding [*print-pprint-dispatch* simple-dispatch
+            *print-right-margin* 10, *print-miser-width* 9]
+    (cl-format nil "~:<LIST ~@_~W ~@_~W ~@_~W~:>" '(first second third)))
+  "(LIST\n first\n second\n third)"
+
+  (binding [*print-pprint-dispatch* simple-dispatch
+            *print-right-margin* 10, *print-miser-width* 8]
+    (cl-format nil "~:<LIST ~@_~W ~@_~W ~@_~W~:>" '(first second third)))
+  "(LIST first second third)"
+)
 
 (simple-tests print-length-tests
   (binding [*print-length* 1] (with-out-str (pprint '(a b c d e f))))
