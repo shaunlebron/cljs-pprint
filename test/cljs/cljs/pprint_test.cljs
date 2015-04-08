@@ -797,3 +797,80 @@
   (foo-g 3.14E120) "*********|?????????|%%%%%%%%%|3.14E+120"
   ; Clojure doesn't support real numbers this large
 )
+
+(defn type-clash-error [fun nargs argnum right-type wrong-type]
+  (format nil ;; CLtL has this format string slightly wrong
+          "~&Function ~S requires its ~:[~:R ~;~*~]~
+           argument to be of type ~S,~%but it was called ~
+           with an argument of type ~S.~%"
+          fun (= nargs 1) argnum right-type wrong-type))
+
+(simple-tests cltl-Newline-tests
+  (type-clash-error 'aref nil 2 'integer 'vector)
+  "Function aref requires its second argument to be of type integer,\nbut it was called with an argument of type vector.\n"
+  (type-clash-error 'car 1 1 'list 'short-float)
+  "Function car requires its argument to be of type list,\nbut it was called with an argument of type short-float.\n"
+)
+
+(simple-tests cltl-?-tests
+  (format nil "~? ~D" "<~A ~D>" '("Foo" 5) 7) "<Foo 5> 7"
+  (format nil "~? ~D" "<~A ~D>" '("Foo" 5 14) 7) "<Foo 5> 7"
+  (format nil "~@? ~D" "<~A ~D>" "Foo" 5 7) "<Foo 5> 7"
+  (format nil "~@? ~D" "<~A ~D>" "Foo" 5 14 7) "<Foo 5> 14"
+)
+
+(defn f [n] (format nil "~@(~R~) error~:P detected." n))
+
+(simple-tests cltl-paren-tests
+  (format nil "~@R ~(~@R~)" 14 14) "XIV xiv"
+  (f 0) "Zero errors detected."
+  (f 1) "One error detected."
+  (f 23) "Twenty-three errors detected."
+)
+
+(let [*print-level* nil *print-length* 5]
+  (simple-tests cltl-bracket-tests
+    (format nil "~@[ print level = ~D~]~@[ print length = ~D~]"
+            *print-level* *print-length*)
+    " print length = 5")
+)
+
+(let [foo "Items:~#[ none~; ~S~; ~S and ~S~
+           ~:;~@{~#[~; and~] ~
+           ~S~^,~}~]."]
+  (simple-tests cltl-bracket1-tests
+    (format nil foo) "Items: none."
+    (format nil foo 'foo) "Items: foo."
+    (format nil foo 'foo 'bar) "Items: foo and bar."
+    (format nil foo 'foo 'bar 'baz) "Items: foo, bar, and baz."
+    (format nil foo 'foo 'bar 'baz 'quux) "Items: foo, bar, baz, and quux."
+  ))
+
+(simple-tests cltl-curly-bracket-tests
+  (format nil
+          "The winners are:~{ ~S~}."
+          '(fred harry jill))
+  "The winners are: fred harry jill."
+
+  (format nil "Pairs:~{ <~S,~S>~}." '(a 1 b 2 c 3))
+  "Pairs: <a,1> <b,2> <c,3>."
+
+  (format nil "Pairs:~:{ <~S,~S>~}." '((a 1) (b 2) (c 3)))
+  "Pairs: <a,1> <b,2> <c,3>."
+
+  (format nil "Pairs:~@{ <~S,~S>~}." 'a 1 'b 2 'c 3)
+  "Pairs: <a,1> <b,2> <c,3>."
+
+  (format nil "Pairs:~:@{ <~S,~S>~}." '(a 1) '(b 2) '(c 3))
+  "Pairs: <a,1> <b,2> <c,3>."
+)
+
+(simple-tests cltl-angle-bracket-tests
+  (format nil "~10<foo~;bar~>")           "foo    bar"
+  (format nil "~10:<foo~;bar~>")          "  foo  bar"
+  (format nil "~10:@<foo~;bar~>")         "  foo bar "
+  (format nil "~10<foobar~>")             "    foobar"
+  (format nil "~10:<foobar~>")            "    foobar"
+  (format nil "~10@<foobar~>")            "foobar    "
+  (format nil "~10:@<foobar~>")           "  foobar  "
+)
