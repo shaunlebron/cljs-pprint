@@ -3,6 +3,7 @@
  "setf"                   :same-name
  "pretty-writer"          :same-name
  "pprint"                 ["pprint*" "pprint-sb" "pprint-str" "pprint"]
+ "set-pprint-dispatch"    :same-name
  "pretty-writer?"         :same-name
  "make-pretty-writer"     :same-name
  "*print-right-margin*"        :same-name
@@ -90,4 +91,114 @@
  "pprint-vector"          :same-name
  "pprint-map"             :same-name
  "simple-dispatch"        :same-name
+ "cl-format"              :same-name
+ "*format-str*"           :same-name
+ "format-error"           :same-name
+ "arg-navigator"          :same-name
+ "init-navigator"         :same-name
+ "next-arg"               :same-name
+ "next-arg-or-nil"        :same-name
+ "get-format-arg"         :same-name
+ "absolute-reposition"    :same-name
+ "relative-reposition"    :same-name
+ "compiled-directive"     :same-name
+ "realize-parameter"      :same-name
+ "realize-parameter-list" :same-name
+ "special-radix-markers"  :same-name
+ "format-simple-number"   :same-name
+ "format-ascii"           :same-name
+ "integral?"              :same-name
+ "remainders"             :same-name
+ "base-str"               :same-name
+ "java-base-formats"      "javascript-base-formats"
+ "opt-base-str"           :same-name
+ "group-by*"              :same-name
+ "format-integer"         :same-name
+ "english-cardinal-units" :same-name
+ "english-ordinal-units"  :same-name
+ "english-cardinal-tens"  :same-name
+ "english-ordinal-tens"   :same-name
+ "english-scale-numbers"  :same-name
+ "format-simple-cardinal" :same-name
+ "add-english-scales"     :same-name
+ "format-cardinal-english" :same-name
+ "format-simple-ordinal"  :same-name
+ "format-ordinal-english" :same-name
+ "old-roman-table"        :same-name
+ "new-roman-table"        :same-name
+ "format-roman"           :same-name
+ "format-old-roman"       :same-name
+ "format-new-roman"       :same-name
+ "special-chars"          :same-name
+ "pretty-character"       :same-name
+ "readable-character"     :same-name
+ "plain-character"        :same-name
+ "abort?"                 :same-name
+ "execute-sub-format"     :same-name
+ "float-parts-base"       :same-name
+ "float-parts"            :same-name
+ "inc-s"                  :same-name
+ "round-str"              :same-name
+ "expand-fixed"           :same-name
+ "insert-decimal"         :same-name
+ "get-fixed"              :same-name
+ "insert-scaled-decimal"  :same-name
+ "convert-ratio"          :same-name
+ "fixed-float"            :same-name
+ "exponential-float"      :same-name
+ "general-float"          :same-name
+ "dollar-float"           :same-name
+ "choice-conditional"     :same-name
+ "boolean-conditional"    :same-name
+ "check-arg-conditional"  :same-name
+ "iterate-sublist"        :same-name
+ "iterate-list-of-sublists" :same-name
+ "iterate-main-list"      :same-name
+ "iterate-main-sublists"  :same-name
+ "logical-block-or-justify" :same-name
+ "render-clauses"         :same-name
+ "justify-clauses"        :same-name
+ "downcase-writer"        :same-name
+ "upcase-writer"          :same-name
+ "capitalize-string"      :same-name
+ "capitalize-word-writer" :same-name
+ "init-cap-writer"        :same-name
+ "modify-case"            :same-name
+ "get-pretty-writer"      :same-name
+ "fresh-line"             :same-name
+ "absolute-tabulation"    :same-name
+ "relative-tabulation"    :same-name
+ "pprint-indent"          :same-name
+ "format-logical-block"   :same-name
+ "set-indent"             :same-name
+ "conditional-newline"    :same-name
+ "process-directive-table-element" :same-name
+ "defdirectives"          :same-name
+ "param-pattern"          :same-name
+ "special-params"         :same-name
+ "extract-param"          :same-name
+ "extract-params"         :same-name
+ "translate-param"        :same-name
+ "flag-defs"              :same-name
+ "extract-flags"          :same-name
+ "check-flags"            :same-name
+ "map-params"             :same-name
+ "compile-directive"      :same-name
+ "compile-raw-string"     :same-name
+ "right-bracket"          :same-name
+ "separator?"             :same-name
+ "else-separator?"        :same-name
+ "process-bracket"        :same-name
+ "process-clause"         :same-name
+ "collect-clauses"        :same-name
+ "process-nesting"        :same-name
+ "compile-format"         :same-name
+ "needs-pretty"           :same-name
+ "execute-format"         :same-name
+ "cached-compile"         :same-name
+ "formatter"              :same-name
+ "formatter-out"          :same-name
+ "table-ize"              :same-name
+ "write-option-table"     :same-name
+ "print-table"            :same-name
  }
