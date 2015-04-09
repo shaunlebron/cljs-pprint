@@ -3,11 +3,14 @@
   (:require
     [cemerick.cljs.test :as t]
     [cljs.pprint :refer [pprint cl-format *out* get-pretty-writer prn print-table
+                         write code-dispatch
                          *print-pprint-dispatch* simple-dispatch
-                         *print-right-margin* *print-miser-width*]])
+                         *print-right-margin* *print-miser-width*]]
+    [cljs.reader :as reader])
   (:require-macros
     [cemerick.cljs.test :refer [deftest is]]
-    [cljs.pprint-test :refer [simple-tests]])
+    [cljs.pprint-test :refer [simple-tests]]
+    [cljs.pprint :refer [with-pprint-dispatch]])
   (:import goog.string.StringBuffer))
 
 (def format cl-format)
@@ -42,6 +45,70 @@ Usage: *hello*
             *print-right-margin* 10, *print-miser-width* 10]
     (cl-format nil "~<{~;LIST ~@_~W ~@_~W ~@_~W~;}~:>" '(first second third)))
   "{LIST\n first\n second\n third}"
+)
+
+(simple-tests pprint-test
+  (binding [*print-pprint-dispatch* simple-dispatch]
+    (write '(defn foo [x y]
+              (let [result (* x y)]
+                (if (> result 400)
+                  (cl-format true "That number is too big")
+                  (cl-format true "The  result of ~d x ~d is ~d" x y result))))
+           :stream nil))
+  "(defn
+ foo
+ [x y]
+ (let
+  [result (* x y)]
+  (if
+   (> result 400)
+   (cl-format true \"That number is too big\")
+   (cl-format true \"The  result of ~d x ~d is ~d\" x y result))))"
+
+  (with-pprint-dispatch code-dispatch
+    (write '(defn foo [x y]
+              (let [result (* x y)]
+                (if (> result 400)
+                  (cl-format true "That number is too big")
+                  (cl-format true "The  result of ~d x ~d is ~d" x y result))))
+           :stream nil))
+  "(defn foo [x y]
+  (let [result (* x y)]
+    (if (> result 400)
+      (cl-format true \"That number is too big\")
+      (cl-format true \"The  result of ~d x ~d is ~d\" x y result))))"
+
+  (binding [*print-pprint-dispatch* simple-dispatch
+            *print-right-margin* 15]
+    (write '(fn (cons (car x) (cdr y))) :stream nil))
+  "(fn\n (cons\n  (car x)\n  (cdr y)))"
+
+  (with-pprint-dispatch code-dispatch
+    (binding [*print-right-margin* 52]
+      (write
+        '(add-to-buffer this (make-buffer-blob (str (char c)) nil))
+        :stream nil)))
+  "(add-to-buffer\n  this\n  (make-buffer-blob (str (char c)) nil))"
+)
+
+(simple-tests pprint-reader-macro-test
+  ;;I'm not sure this will work without significant work on cljs. Short story, cljs
+  ;;reader only takes valid EDN, so #(* % %) won't work.
+  ;;see http://stackoverflow.com/a/25712675/546321 for more details
+  #_(with-pprint-dispatch code-dispatch
+    (write (reader/read-string "(map #(first %) [[1 2 3] [4 5 6] [7]])")
+           :stream nil))
+  "(map #(first %) [[1 2 3] [4 5 6] [7]])"
+
+  (with-pprint-dispatch code-dispatch
+    (write (reader/read-string "@@(ref (ref 1))")
+           :stream nil))
+  "@@(ref (ref 1))"
+
+  (with-pprint-dispatch code-dispatch
+    (write (reader/read-string "'foo")
+           :stream nil))
+  "'foo"
 )
 
 (simple-tests xp-miser-test
