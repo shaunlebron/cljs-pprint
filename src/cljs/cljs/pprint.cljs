@@ -15,7 +15,7 @@
   (:require
     [cljs.core :refer [IWriter IDeref]]
     [clojure.string :as string])
-  (:import goog.string.StringBuffer))
+  (:import [goog.string StringBuffer]))
 
 (def ^:dynamic *out* nil)
 
