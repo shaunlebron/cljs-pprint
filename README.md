@@ -14,6 +14,14 @@ __CLJS needs a pretty printer__ - Clojure has two pretty-printers available, whi
 
 [See docs for more notes](docs/)
 
+## Running the tests
+
+Node.js must be installed.
+
+```sh
+lein cljsbuild once test
+```
+
 ## Running
 
 ```sh
