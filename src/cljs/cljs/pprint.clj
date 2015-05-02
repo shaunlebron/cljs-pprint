@@ -9,7 +9,7 @@
 (defmacro with-pretty-writer [base-writer & body]
   `(let [base-writer# ~base-writer
          new-writer# (not (pretty-writer? base-writer#))]
-     (binding [~'*out* (if new-writer#
+     (cljs.core/binding [~'*out* (if new-writer#
                          (make-pretty-writer base-writer# *print-right-margin* *print-miser-width*)
                          base-writer#)]
        ~@body
@@ -60,7 +60,7 @@
     `(do (if (cljs.pprint/level-exceeded)
            (~'-write cljs.pprint/*out* "#")
            (do
-             (binding [cljs.pprint/*current-level* (inc cljs.pprint/*current-level*)
+             (cljs.core/binding [cljs.pprint/*current-level* (inc cljs.pprint/*current-level*)
                        cljs.pprint/*current-length* 0]
                (cljs.pprint/start-block cljs.pprint/*out*
                                         ~(:prefix options)
