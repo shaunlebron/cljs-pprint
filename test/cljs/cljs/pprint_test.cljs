@@ -1,17 +1,16 @@
 (ns cljs.pprint-test
   (:refer-clojure :exclude [prn])
+  (:require-macros
+    [cljs.pprint-test :refer [simple-tests]]
+    [cljs.pprint :refer [with-pprint-dispatch]])
   (:require
-    [cemerick.cljs.test :as t]
+    [cljs.test :as t :refer-macros [deftest is run-tests]]
     [cljs.pprint :refer [pprint cl-format *out* get-pretty-writer prn print-table
                          write code-dispatch
                          *print-pprint-dispatch* simple-dispatch
                          *print-right-margin* *print-miser-width*]]
     [cljs.reader :as reader])
-  (:require-macros
-    [cemerick.cljs.test :refer [deftest is]]
-    [cljs.pprint-test :refer [simple-tests]]
-    [cljs.pprint :refer [with-pprint-dispatch]])
-  (:import goog.string.StringBuffer))
+  (:import [goog.string StringBuffer]))
 
 (def format cl-format)
 
@@ -1047,3 +1046,5 @@ Usage: *hello*
 "
   )
 
+(enable-console-print!)
+(run-tests)

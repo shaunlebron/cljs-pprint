@@ -5,19 +5,18 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
 
-  :dependencies [[org.clojure/clojure "1.6.0"]
-                 [org.clojure/clojurescript "0.0-2665"]
+  :dependencies [[org.clojure/clojure "1.7.0-beta2"]
+                 [org.clojure/clojurescript "0.0-3211"]
                  [org.clojure/core.async "0.1.346.0-17112a-alpha"]
                  [hiccups "0.3.0"]
                  [fipp "0.5.2"]
-                 [figwheel "0.2.3-SNAPSHOT"]
+                 [figwheel "0.2.9"]
                  [cljs-ajax "0.3.10"]
                  [markdown-clj "0.9.62"]
                  [cljsjs/jquery "1.9.0-0"]]
 
-  :plugins [[lein-cljsbuild "1.0.4"]
-            [lein-figwheel "0.2.3-SNAPSHOT"]
-            [com.cemerick/clojurescript.test "0.3.3"]]
+  :plugins [[lein-cljsbuild "1.0.5"]
+            [lein-figwheel "0.2.9"]]
 
   :source-paths ["src/parse"]
   :main parse.core
@@ -29,16 +28,17 @@
                                     "resources/report/js/report.js"]
 
   :cljsbuild
-  {:test-commands {"test" ["phantomjs" :runner "resources/test/pprint.test.js"]}
+  {:test-commands {"test" ["node" :runner "resources/test/pprint.test.js"]}
 
    :builds
    [{:id "test"
      :source-paths ["src/cljs" "test/cljs"]
+     :notify-command ["node" "resources/test/pprint.test.js"]
      :compiler
      {:output-to  "resources/test/pprint.test.js"
       :source-map "resources/test/pprint.test.js.map"
       :output-dir "resources/test/out"
-      :optimizations :whitespace}}
+      :optimizations :simple}}
 
     {:id "report"
      :source-paths ["src/report" "src/report_dev"]
