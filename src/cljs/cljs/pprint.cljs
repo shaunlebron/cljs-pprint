@@ -2872,19 +2872,21 @@ type-map {"core$future_call" "Future",
 
 (def ^{:private true} pprint-pqueue (formatter-out "~<<-(~;~@{~w~^ ~_~}~;)-<~:>"))
 
+(defn- type-dispatcher [obj]
+  (cond
+    (instance? PersistentQueue obj) :queue
+    (satisfies? IDeref obj) :deref
+    (symbol? obj) :symbol
+    (seq? obj) :list
+    (map? obj) :map
+    (vector? obj) :vector
+    (set? obj) :set
+    (nil? obj) nil
+    :default :default))
+
 (defmulti simple-dispatch
   "The pretty print dispatch function for simple data structure format."
-  (fn [obj]
-    (cond
-      (instance? PersistentQueue obj) :queue
-      (satisfies? IDeref obj) :deref
-      (symbol? obj) :symbol
-      (seq? obj) :list
-      (map? obj) :map
-      (vector? obj) :vector
-      (set? obj) :set
-      (nil? obj) nil
-      :default :default)))
+  type-dispatcher)
 
 (use-method simple-dispatch :list pprint-list)
 (use-method simple-dispatch :vector pprint-vector)
@@ -3184,7 +3186,7 @@ type-map {"core$future_call" "Future",
   code-dispatch
   "The pretty print dispatch function for pretty printing Clojure code."
   {:added "1.2" :arglists '[[object]]}
-  simple-dispatch)
+  type-dispatcher)
 
 (use-method code-dispatch :list pprint-code-list)
 (use-method code-dispatch :symbol pprint-code-symbol)
