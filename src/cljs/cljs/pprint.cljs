@@ -2802,16 +2802,20 @@ column number or pretty printing"
 ;;; are a little easier on the stack. (Or, do "real" compilation, a
 ;;; la Common Lisp)
 
+;;; (def pprint-simple-list (formatter-out "~:<~@{~w~^ ~_~}~:>"))
+(defn- pprint-simple-list [alis]
+  (pprint-logical-block :prefix "(" :suffix ")"
+    (print-length-loop [alis (seq alis)]
+      (when alis
+        (write-out (first alis))
+        (when (next alis)
+          (-write *out* " ")
+          (pprint-newline :linear)
+          (recur (next alis)))))))
+
 (defn- pprint-list [alis]
   (if-not (pprint-reader-macro alis)
-    (pprint-logical-block :prefix "(" :suffix ")"
-      (print-length-loop [alis (seq alis)]
-        (when alis
-          (write-out (first alis))
-          (when (next alis)
-            (-write *out* " ")
-            (pprint-newline :linear)
-            (recur (next alis))))))))
+    (pprint-simple-list alis)))
 
 ;;; (def pprint-vector (formatter-out "~<[~;~@{~w~^ ~_~}~;]~:>"))
 (defn- pprint-vector [avec]
@@ -2823,6 +2827,8 @@ column number or pretty printing"
           (-write *out* " ")
           (pprint-newline :linear)
           (recur (next aseq)))))))
+
+(def ^{:private true} pprint-array (formatter-out "~<[~;~@{~w~^, ~:_~}~;]~:>"))
 
 ;;; (def pprint-map (formatter-out "~<{~;~@{~<~w~^ ~_~w~:>~^, ~_~}~;}~:>"))
 (defn- pprint-map [amap]

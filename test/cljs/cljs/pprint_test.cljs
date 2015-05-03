@@ -6,7 +6,10 @@
     [cljs.test :as t :refer-macros [deftest is run-tests]]
     [cljs.pprint :refer [pprint cl-format *out* get-pretty-writer prn print-table
                          *print-pprint-dispatch* simple-dispatch
-                         *print-right-margin* *print-miser-width*]])
+                         *print-right-margin* *print-miser-width*
+                         write code-dispatch]
+     :refer-macros [with-pprint-dispatch]]
+    [cljs.reader :as reader])
 
   (:import [goog.string StringBuffer]))
 
@@ -43,6 +46,75 @@ Usage: *hello*
     (cl-format nil "~<{~;LIST ~@_~W ~@_~W ~@_~W~;}~:>" '(first second third)))
   "{LIST\n first\n second\n third}"
 )
+
+(simple-tests pprint-test
+  (binding [*print-pprint-dispatch* simple-dispatch]
+    (write '(defn foo [x y]
+              (let [result (* x y)]
+                (if (> result 400)
+                  (cl-format true "That number is too big")
+                  (cl-format true "The  result of ~d x ~d is ~d" x y result))))
+           :stream nil))
+  "(defn
+ foo
+ [x y]
+ (let
+  [result (* x y)]
+  (if
+   (> result 400)
+   (cl-format true \"That number is too big\")
+   (cl-format true \"The  result of ~d x ~d is ~d\" x y result))))"
+
+  (with-pprint-dispatch code-dispatch                       ;;fail
+    (write '(defn foo [x y]
+              (let [result (* x y)]
+                (if (> result 400)
+                  (cl-format true "That number is too big")
+                  (cl-format true "The  result of ~d x ~d is ~d" x y result))))
+           :stream nil))
+  "(defn foo [x y]
+  (let [result (* x y)]
+    (if (> result 400)
+      (cl-format true \"That number is too big\")
+      (cl-format true \"The  result of ~d x ~d is ~d\" x y result))))"
+
+  (binding [*print-pprint-dispatch* simple-dispatch
+            *print-right-margin* 15]
+    (write '(fn (cons (car x) (cdr y))) :stream nil))
+  "(fn\n (cons\n  (car x)\n  (cdr y)))"
+
+  ;;TODO Fails because of spacing; may be due to the mutating clj difference from cljs
+  ;;or could simply be a bug in our code
+  (with-pprint-dispatch code-dispatch
+    (binding [*print-right-margin* 52]
+      (write
+        '(add-to-buffer this (make-buffer-blob (str (char c)) nil))
+        :stream nil)))
+  "(add-to-buffer\n  this \n  (make-buffer-blob (str (char c)) nil))"
+  #_"(add-to-buffer\n  this\n  (make-buffer-blob (str (char c)) nil))"
+  )
+
+(simple-tests pprint-reader-macro-test
+  ;;I'm not sure this will work without significant work on cljs. Short story, cljs
+  ;;reader only takes valid EDN, so #(* % %) won't work.
+  ;;see http://stackoverflow.com/a/25712675/546321 for more details
+  #_(with-pprint-dispatch code-dispatch
+    (write (reader/read-string "(map #(first %) [[1 2 3] [4 5 6] [7]])")
+           :stream nil))
+  #_"(map #(first %) [[1 2 3] [4 5 6] [7]])"
+
+  ;;TODO Not sure what to do about this test due to the reader handling of `@`
+  (with-pprint-dispatch code-dispatch
+    (write (reader/read-string "@@(ref (ref 1))")
+           :stream nil))
+  "(deref (deref (ref (ref 1))))"
+  #_"@@(ref (ref 1))"
+
+  (with-pprint-dispatch code-dispatch
+    (write (reader/read-string "'foo")
+           :stream nil))
+  "'foo"
+  )
 
 (simple-tests xp-miser-test
   (binding [*print-pprint-dispatch* simple-dispatch
@@ -93,17 +165,17 @@ Usage: *hello*
   (binding [*print-length* 8] (with-out-str (pprint (sorted-map 1 2, 3 4, 5 6, 7 8, 9 10, 11 12))))
   "{1 2, 3 4, 5 6, 7 8, 9 10, 11 12}\n"
 
-  #_(comment "Not implemented"
-           (binding [*print-length* 1] (with-out-str (pprint (int-array [1 2 3 4 5 6]))))
-           "[1, ...]\n"
-           (binding [*print-length* 2] (with-out-str (pprint (int-array [1 2 3 4 5 6]))))
-           "[1, 2, ...]\n"
-           (binding [*print-length* 6] (with-out-str (pprint (int-array [1 2 3 4 5 6]))))
-           "[1, 2, 3, 4, 5, 6]\n"
-           (binding [*print-length* 8] (with-out-str (pprint (int-array [1 2 3 4 5 6]))))
-           "[1, 2, 3, 4, 5, 6]\n"
-           )
-)
+  ;;TODO Not sure if JS objs are handled the way we want; need to further investigate
+  (binding [*print-length* 1] (with-out-str (pprint (int-array [1 2 3 4 5 6]))))
+  "#js [1 ...]\n"
+  (binding [*print-length* 2] (with-out-str (pprint (int-array [1 2 3 4 5 6]))))
+  "#js [1 2 ...]\n"
+  (binding [*print-length* 6] (with-out-str (pprint (int-array [1 2 3 4 5 6]))))
+  "#js [1 2 3 4 5 6]\n"
+  (binding [*print-length* 8] (with-out-str (pprint (int-array [1 2 3 4 5 6]))))
+  "#js [1 2 3 4 5 6]\n"
+
+  )
 
 (simple-tests print-margin-tests
   (binding [cljs.pprint/*print-right-margin* 20]

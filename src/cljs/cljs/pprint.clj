@@ -136,3 +136,9 @@ format-in can be either a control string or a previously compiled format."
        (let [navigator# (cljs.pprint/init-navigator args#)]
          (cljs.pprint/execute-format cf# navigator#)))))
 
+(defmacro with-pprint-dispatch
+  "Execute body with the pretty print dispatch function bound to function."
+  [function & body]
+  `(cljs.core/binding [cljs.pprint/*print-pprint-dispatch* ~function]
+     ~@body))
+
