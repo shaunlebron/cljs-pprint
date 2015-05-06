@@ -2,7 +2,7 @@
  "getf"                   :same-name
  "setf"                   :same-name
  "pretty-writer"          :same-name
- "pprint"                 ["pprint*" "pprint-sb" "pprint-str" "pprint"]
+ "pprint"                 :same-name
  "set-pprint-dispatch"    :same-name
  "with-pprint-dispatch"   :same-name
  "pretty-writer?"         :same-name

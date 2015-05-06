@@ -73,22 +73,23 @@
         p (if (= :same-name p) orig-name p)
         port-names (if (sequential? p) p [p])
         ports (map #(get-in forms [:cljs %]) port-names)]
-    (list
+    [:table.code-compare-table
       [:tr.header
        [:td (func-head orig true)]
        [:td (map func-head ports)]]
       [:tr.code
        [:td (code-block orig)]
-       [:td (map code-block ports)]])))
+       [:td (map code-block ports)]]]))
 
 (defn code-compare-section
   []
   [:div.code-compare-section
    [:table.code-compare-table
     [:tr.header-row
-     [:td [:h1 "Clojure"] "original clojure.pprint functions"]
-     [:td [:h1 "ClojureScript"] "new ported functions"]]
-    (map code-compare-def progress)]])
+     [:td [:h1 "Clojure (left)"] "original clojure.pprint functions"]
+     [:td [:h1 "ClojureScript (right)"] "new ported functions"]]]
+
+    (map code-compare-def progress)])
 
 (defn page []
   (html
