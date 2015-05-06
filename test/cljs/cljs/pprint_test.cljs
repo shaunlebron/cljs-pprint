@@ -1,7 +1,7 @@
 (ns cljs.pprint-test
   (:refer-clojure :exclude [prn])
   (:require-macros
-    [cljs.pprint-test :refer [simple-tests]])
+    [cljs.pprint-test :refer [simple-tests code-block]])
   (:require
     [cljs.test :as t :refer-macros [deftest is run-tests]]
     [cljs.pprint :refer [pprint cl-format *out* get-pretty-writer prn print-table
@@ -126,6 +126,42 @@ Usage: *hello*
             *print-right-margin* 10, *print-miser-width* 8]
     (cl-format nil "~:<LIST ~@_~W ~@_~W ~@_~W~:>" '(first second third)))
   "(LIST first second third)"
+)
+
+(code-block code-block-tests
+  "(defn cl-format
+  \"An implementation of a Common Lisp compatible format function\"
+  [stream format-in & args]
+  (let [compiled-format (if (string? format-in)
+                          (compile-format format-in)
+                          format-in)
+        navigator (init-navigator args)]
+    (execute-format stream compiled-format navigator)))"
+
+ "(defn pprint-defn [writer alis]
+  (if (next alis)
+    (let [[defn-sym defn-name & stuff] alis
+          [doc-str stuff] (if (string? (first stuff))
+                            [(first stuff) (next stuff)]
+                            [nil stuff])
+          [attr-map stuff] (if (map? (first stuff))
+                             [(first stuff) (next stuff)]
+                             [nil stuff])]
+      (pprint-logical-block
+        writer
+        :prefix
+        \"(\"
+        :suffix
+        \")\"
+        (cl-format true \"~w ~1I~@_~w\" defn-sym defn-name)
+        (if doc-str (cl-format true \" ~_~w\" doc-str))
+        (if attr-map (cl-format true \" ~_~w\" attr-map))
+        (cond
+          (vector? (first stuff)) (single-defn
+                                    stuff
+                                    (or doc-str attr-map))
+          :else (multi-defn stuff (or doc-str attr-map)))))
+    (pprint-simple-code-list writer alis)))"
 )
 
 (simple-tests print-length-tests
