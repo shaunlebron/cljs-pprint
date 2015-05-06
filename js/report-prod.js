@@ -236,7 +236,7 @@ a: {
   Sa = "";
 }
 ;var Va = -1 != Sa.indexOf("Opera") || -1 != Sa.indexOf("OPR"), Xa = -1 != Sa.indexOf("Trident") || -1 != Sa.indexOf("MSIE"), Ya = -1 != Sa.indexOf("Gecko") && -1 == Sa.toLowerCase().indexOf("webkit") && !(-1 != Sa.indexOf("Trident") || -1 != Sa.indexOf("MSIE")), Za = -1 != Sa.toLowerCase().indexOf("webkit");
-function $a() {
+function ab() {
   var a = ba.document;
   return a ? a.documentMode : void 0;
 }
@@ -247,7 +247,7 @@ var bb = function() {
   }
   Ya ? b = /rv\:([^\);]+)(\)|;)/ : Xa ? b = /\b(?:MSIE|rv)[: ]([^\);]+)(\)|;)/ : Za && (b = /WebKit\/(\S+)/);
   b && (a = (a = b.exec(Sa)) ? a[1] : "");
-  return Xa && (b = $a(), b > parseFloat(a)) ? String(b) : a;
+  return Xa && (b = ab(), b > parseFloat(a)) ? String(b) : a;
 }(), cb = {};
 function db(a) {
   var b;
@@ -267,9 +267,9 @@ function db(a) {
   }
   return b;
 }
-var eb = ba.document, fb = eb && Xa ? $a() || ("CSS1Compat" == eb.compatMode ? parseInt(bb, 10) : 5) : void 0;
+var eb = ba.document, gb = eb && Xa ? ab() || ("CSS1Compat" == eb.compatMode ? parseInt(bb, 10) : 5) : void 0;
 var hb;
-(hb = !Xa) || (hb = Xa && 9 <= fb);
+(hb = !Xa) || (hb = Xa && 9 <= gb);
 var ib = hb, jb = Xa && !db("9");
 !Za || db("528");
 Ya && db("1.9b") || Xa && db("8") || Va && db("9.5") || Za && db("528");
@@ -2885,7 +2885,7 @@ g.call = function() {
     a = this;
     return a.j.w ? a.j.w() : a.j.call(null);
   }
-  var M = null, M = function(M, La, Oa, Ra, Wa, ab, gb, qb, xb, Gb, Sb, gc, rc, Kc, ld, Md, qe, hf, wg, Gi, ml, zo) {
+  var M = null, M = function(M, La, Oa, Ra, Wa, $a, fb, qb, xb, Gb, Sb, gc, rc, Kc, ld, Md, qe, hf, wg, Gi, ml, Ao) {
     switch(arguments.length) {
       case 1:
         return yb.call(this, M);
@@ -2898,39 +2898,39 @@ g.call = function() {
       case 5:
         return S.call(this, M, La, Oa, Ra, Wa);
       case 6:
-        return K.call(this, M, La, Oa, Ra, Wa, ab);
+        return K.call(this, M, La, Oa, Ra, Wa, $a);
       case 7:
-        return G.call(this, M, La, Oa, Ra, Wa, ab, gb);
+        return G.call(this, M, La, Oa, Ra, Wa, $a, fb);
       case 8:
-        return D.call(this, M, La, Oa, Ra, Wa, ab, gb, qb);
+        return D.call(this, M, La, Oa, Ra, Wa, $a, fb, qb);
       case 9:
-        return B.call(this, M, La, Oa, Ra, Wa, ab, gb, qb, xb);
+        return B.call(this, M, La, Oa, Ra, Wa, $a, fb, qb, xb);
       case 10:
-        return A.call(this, M, La, Oa, Ra, Wa, ab, gb, qb, xb, Gb);
+        return A.call(this, M, La, Oa, Ra, Wa, $a, fb, qb, xb, Gb);
       case 11:
-        return v.call(this, M, La, Oa, Ra, Wa, ab, gb, qb, xb, Gb, Sb);
+        return v.call(this, M, La, Oa, Ra, Wa, $a, fb, qb, xb, Gb, Sb);
       case 12:
-        return q.call(this, M, La, Oa, Ra, Wa, ab, gb, qb, xb, Gb, Sb, gc);
+        return q.call(this, M, La, Oa, Ra, Wa, $a, fb, qb, xb, Gb, Sb, gc);
       case 13:
-        return p.call(this, M, La, Oa, Ra, Wa, ab, gb, qb, xb, Gb, Sb, gc, rc);
+        return p.call(this, M, La, Oa, Ra, Wa, $a, fb, qb, xb, Gb, Sb, gc, rc);
       case 14:
-        return m.call(this, M, La, Oa, Ra, Wa, ab, gb, qb, xb, Gb, Sb, gc, rc, Kc);
+        return m.call(this, M, La, Oa, Ra, Wa, $a, fb, qb, xb, Gb, Sb, gc, rc, Kc);
       case 15:
-        return k.call(this, M, La, Oa, Ra, Wa, ab, gb, qb, xb, Gb, Sb, gc, rc, Kc, ld);
+        return k.call(this, M, La, Oa, Ra, Wa, $a, fb, qb, xb, Gb, Sb, gc, rc, Kc, ld);
       case 16:
-        return h.call(this, M, La, Oa, Ra, Wa, ab, gb, qb, xb, Gb, Sb, gc, rc, Kc, ld, Md);
+        return h.call(this, M, La, Oa, Ra, Wa, $a, fb, qb, xb, Gb, Sb, gc, rc, Kc, ld, Md);
       case 17:
-        return f.call(this, M, La, Oa, Ra, Wa, ab, gb, qb, xb, Gb, Sb, gc, rc, Kc, ld, Md, qe);
+        return f.call(this, M, La, Oa, Ra, Wa, $a, fb, qb, xb, Gb, Sb, gc, rc, Kc, ld, Md, qe);
       case 18:
-        return e.call(this, M, La, Oa, Ra, Wa, ab, gb, qb, xb, Gb, Sb, gc, rc, Kc, ld, Md, qe, hf);
+        return e.call(this, M, La, Oa, Ra, Wa, $a, fb, qb, xb, Gb, Sb, gc, rc, Kc, ld, Md, qe, hf);
       case 19:
-        return d.call(this, M, La, Oa, Ra, Wa, ab, gb, qb, xb, Gb, Sb, gc, rc, Kc, ld, Md, qe, hf, wg);
+        return d.call(this, M, La, Oa, Ra, Wa, $a, fb, qb, xb, Gb, Sb, gc, rc, Kc, ld, Md, qe, hf, wg);
       case 20:
-        return c.call(this, M, La, Oa, Ra, Wa, ab, gb, qb, xb, Gb, Sb, gc, rc, Kc, ld, Md, qe, hf, wg, Gi);
+        return c.call(this, M, La, Oa, Ra, Wa, $a, fb, qb, xb, Gb, Sb, gc, rc, Kc, ld, Md, qe, hf, wg, Gi);
       case 21:
-        return b.call(this, M, La, Oa, Ra, Wa, ab, gb, qb, xb, Gb, Sb, gc, rc, Kc, ld, Md, qe, hf, wg, Gi, ml);
+        return b.call(this, M, La, Oa, Ra, Wa, $a, fb, qb, xb, Gb, Sb, gc, rc, Kc, ld, Md, qe, hf, wg, Gi, ml);
       case 22:
-        return a.call(this, M, La, Oa, Ra, Wa, ab, gb, qb, xb, Gb, Sb, gc, rc, Kc, ld, Md, qe, hf, wg, Gi, ml, zo);
+        return a.call(this, M, La, Oa, Ra, Wa, $a, fb, qb, xb, Gb, Sb, gc, rc, Kc, ld, Md, qe, hf, wg, Gi, ml, Ao);
     }
     throw Error("Invalid arity: " + arguments.length);
   };
@@ -10884,7 +10884,7 @@ function yo(a) {
   Mf(b) || Rn(N(["Metadata must be Symbol,Keyword,String or Map"], 0));
   return((a = io.A ? io.A(a, !0, null, !0) : io.call(null, a, !0, null)) ? a.p & 262144 || a.ze || (a.p ? 0 : t(fe, a)) : t(fe, a)) ? rf(a, aj.l(N([Hf(a), b], 0))) : Rn(N(["Metadata can only be applied to IWithMetas"], 0));
 }
-function Ao(a) {
+function zo(a) {
   a: {
     if (a = ho("}", a), a = z(a), null == a) {
       a = cj;
@@ -10926,7 +10926,7 @@ function Tn(a) {
   return'"' === a ? so : ":" === a ? vo : ";" === a ? Un : "'" === a ? wo(new y(null, "quote", "quote", 1377916282, null)) : "@" === a ? wo(new y(null, "deref", "deref", 1494944732, null)) : "^" === a ? yo : "`" === a ? jo : "~" === a ? jo : "(" === a ? oo : ")" === a ? no : "[" === a ? po : "]" === a ? no : "{" === a ? qo : "}" === a ? no : "\\" === a ? Mn : "#" === a ? ko : null;
 }
 function lo(a) {
-  return "{" === a ? Ao : "\x3c" === a ? xo() : '"' === a ? Bo : "!" === a ? Un : "_" === a ? Co : null;
+  return "{" === a ? zo : "\x3c" === a ? xo() : '"' === a ? Bo : "!" === a ? Un : "_" === a ? Co : null;
 }
 function io(a, b, c) {
   for (;;) {
@@ -12744,10 +12744,10 @@ function cr(a) {
       return jh(new W(null, 2, 5, X, [pm, a], null));
     };
   }(d, e, f, a, b, c), f);
-  return Id(Id(H, new W(null, 3, 5, X, [Sl, new W(null, 2, 5, X, [fl, br(d)], null), new W(null, 2, 5, X, [fl, V.a(br, a)], null)], null)), new W(null, 3, 5, X, [Kk, new W(null, 2, 5, X, [fl, ar.a(d, !0)], null), new W(null, 2, 5, X, [fl, V.a(ar, a)], null)], null));
+  return new W(null, 3, 5, X, [Hl, new W(null, 3, 5, X, [Kk, new W(null, 2, 5, X, [fl, ar.a(d, !0)], null), new W(null, 2, 5, X, [fl, V.a(ar, a)], null)], null), new W(null, 3, 5, X, [Sl, new W(null, 2, 5, X, [fl, br(d)], null), new W(null, 2, 5, X, [fl, V.a(br, a)], null)], null)], null);
 }
 function dr() {
-  return new W(null, 2, 5, X, [ol, new W(null, 3, 5, X, [Hl, new W(null, 3, 5, X, [bm, new W(null, 3, 5, X, [fl, new W(null, 2, 5, X, [fm, "Clojure"], null), "original clojure.pprint functions"], null), new W(null, 3, 5, X, [fl, new W(null, 2, 5, X, [fm, "ClojureScript"], null), "new ported functions"], null)], null), V.a(cr, Xq)], null)], null);
+  return new W(null, 3, 5, X, [ol, new W(null, 2, 5, X, [Hl, new W(null, 3, 5, X, [bm, new W(null, 3, 5, X, [fl, new W(null, 2, 5, X, [fm, "Clojure (left)"], null), "original clojure.pprint functions"], null), new W(null, 3, 5, X, [fl, new W(null, 2, 5, X, [fm, "ClojureScript (right)"], null), "new ported functions"], null)], null)], null), V.a(cr, Xq)], null);
 }
 function er() {
   $("pre code").each(function(a, b) {
