@@ -4,6 +4,7 @@
  "pretty-writer"          :same-name
  "pprint"                 ["pprint*" "pprint-sb" "pprint-str" "pprint"]
  "set-pprint-dispatch"    :same-name
+ "with-pprint-dispatch"   :same-name
  "pretty-writer?"         :same-name
  "make-pretty-writer"     :same-name
  "*print-right-margin*"        :same-name
@@ -83,6 +84,7 @@
  "level-exceeded"         :same-name
  "pprint-newline"         :same-name
  "write-out"              :same-name
+ "write"                  :same-name
  "parse-lb-options"       :same-name
  "pprint-logical-block"   :same-name
  "pll-mod-body"           :same-name
@@ -169,6 +171,7 @@
  "absolute-tabulation"    :same-name
  "relative-tabulation"    :same-name
  "pprint-indent"          :same-name
+ "pprint-tab"             :same-name
  "format-logical-block"   :same-name
  "set-indent"             :same-name
  "conditional-newline"    :same-name
@@ -201,4 +204,37 @@
  "table-ize"              :same-name
  "write-option-table"     :same-name
  "print-table"            :same-name
+ "reader-macros"          :same-name
+ "pprint-reader-macro"    :same-name
+ "pprint-simple-list"     :same-name
+ "pprint-list"            :same-name
+ "pprint-vector"          :same-name
+ "pprint-array"           :same-name
+ "pprint-set"             :same-name
+ "type-map"               :same-name
+ "map-ref-type"           :same-name
+ "pprint-ideref"          :same-name
+ "pprint-pqueue"          :same-name
+ "pprint-simple-default"  :same-name
+ "brackets"               :same-name
+ "pprint-ns-reference"    :same-name
+ "pprint-ns"              :same-name
+ "pprint-hold-first"      :same-name
+ "single-defn"            :same-name
+ "multi-defn"             :same-name
+ "pprint-defn"            :same-name
+ "pprint-binding-form"    :same-name
+ "pprint-let"             :same-name
+ "pprint-if"              :same-name
+ "pprint-cond"            :same-name
+ "pprint-condp"           :same-name
+ "*symbol-map*"           :same-name
+ "pprint-anon-func"       :same-name
+ "pprint-simple-code-list" :same-name
+ "two-forms"              :same-name
+ "add-core-ns"            :same-name
+ "*code-table*"           :same-name
+ "pprint-code-list"       :same-name
+ "pprint-code-symbol"     :same-name
+ "code-dispatch"          :same-name
  }
